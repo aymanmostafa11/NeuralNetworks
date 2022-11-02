@@ -3,9 +3,11 @@ from sklearn.preprocessing import LabelEncoder
 # TODO : add data reading, preprocessing
 
 encoder = LabelEncoder()
+__data__: pd.DataFrame
 
 def read(data):
     penguins = pd.read_csv(data)
+    __data__ = penguins
     return penguins
 
 
@@ -25,7 +27,8 @@ def preprocessing(data,dataFeatures , test = False):
 
    
 
-                  
+def get_features():
+    return __data__.columns
 
    
 
