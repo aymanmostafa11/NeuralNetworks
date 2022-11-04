@@ -29,10 +29,12 @@ class Perceptron:
             X.insert(0, "bias", np.ones(X.shape[0]))
 
         features_count = X.shape[1]
+        samples_count = X.shape[0]
+
         self.__weights = np.random.rand(1, features_count)
 
         for epoch in range(self.__epochs):
-            for i in range(X.shape[0]):
+            for i in range(samples_count):
                 sample = np.array(X.iloc[i])
                 activation = np.sum(sample * self.__weights)
                 prediction = self.__activation(activation)
@@ -45,4 +47,5 @@ class Perceptron:
         :param X: Dataframe of samples.
         :return: numpy array of predictions.
         """
-        return np.dot(self.__weights, X.T)
+        vectorized_activation = np.vectorize(self.__activation)
+        return vectorized_activation(np.dot(self.__weights, X.T))
