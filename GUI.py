@@ -7,7 +7,7 @@ from gui_logic import *
 ROWS = {'FEATURES': 0, 'CLASSES': 1, "MISC": 2, "BUTTONS": 3}
 WINDOW_SIZE = "800x600"
 FEATURES = ('bill_length', 'bill_depth', 'flipper_length', 'gender', 'body_mass')
-CLASSES = ('C1', 'C2', 'C3')
+CLASSES = ('Adelie', 'Gentoo', 'Chinstrap')
 check_lists = {}
 buttons = {}
 hyper_parameters = {}

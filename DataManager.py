@@ -8,9 +8,11 @@ filepath = "data/penguins.csv"
 
 # TODO: create function to get train or test data
 
-def prep_data():
+def prep_data(classes,features):
     data = read()
     data = preprocessing(data, data.columns.drop("species"))
+    data = encodeTargets(data,classes)
+    
     return data
 
 
@@ -38,6 +40,7 @@ def encodeTargets(data,classes):
     notWantedClass = [c for c in set(data["species"]) if c not in classes]
     data["species"].replace(classes,[-1,1],inplace = True)
     data = data[data["species"]!= notWantedClass[0]]
+    data.reset_index(drop=True, inplace=True)
 
     return data
 
@@ -60,4 +63,6 @@ def split(data,features):
        X_test = testData.drop("species",axis = 1)
        Y_test = testData["species"]
 
+       
+       
        return X_train,X_test,Y_train,Y_test

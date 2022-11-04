@@ -8,10 +8,10 @@ X : pd.DataFrame
 Y : pd.DataFrame
 
 def fit_model(features: list, classes: list, hyper_parameters: dict):
-    data = prep_data()
+    data = prep_data(classes,features)
     __model__ = Perceptron(learning_rate=0.1, epochs=10)
-    Y = data['body_mass_g']
-    X = data.drop('body_mass_g', axis=1)
+    Y = data['species']
+    X = data.drop('species', axis=1)
     __model__.fit(X, Y)
 
 
