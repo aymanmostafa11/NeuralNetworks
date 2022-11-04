@@ -1,11 +1,11 @@
 import tkinter as tk
 import matplotlib.pyplot as plt
-from DataManager import get_features
+from gui_logic import *
 
-ROWS = {'FEATURES': 0, 'CLASSES': 1, "MISC": 2,"BUTTONS": 3}
+ROWS = {'FEATURES': 0, 'CLASSES': 1, "MISC": 2, "BUTTONS": 3}
 WINDOW_SIZE = "800x600"
-FEATURES = ('bill_length','bill_depth','flipper_length','gender','body_mass')
-CLASSES = ('C1','C2','C3')
+FEATURES = ('bill_length', 'bill_depth', 'flipper_length', 'gender', 'body_mass')
+CLASSES = ('C1', 'C2', 'C3')
 # TODO: Create GUI
 
 main_window = tk.Tk()
@@ -20,9 +20,10 @@ def run_gui():
     initialize_features_frame(frames['FEATURES'])
     initialize_classes_frame(frames['CLASSES'])
     initialize_misc_frame(frames['MISC'])
-    tk.Label(frames["BUTTONS"], text="hhh", fg="red").grid(row=0, column=0)
-    main_window.mainloop()
+    initialize_buttons_frame(frames['BUTTONS'])
 
+
+    main_window.mainloop()
 
 
 def initialize_window(window):
@@ -31,7 +32,6 @@ def initialize_window(window):
     row_weight = int(100 / len(ROWS))
     for name, row_index in ROWS.items():
         main_frame.rowconfigure(row_index, weight=row_weight)
-
 
 
 def initialize_frames(parent_frame: tk.Frame):
@@ -44,33 +44,44 @@ def initialize_frames(parent_frame: tk.Frame):
 
 def initialize_features_frame(features_frame: tk.Frame):
     tk.Label(features_frame, text="Choose two features: ").grid(row=0, column=0)
-    features_checklist=ChecklistBox(features_frame,FEATURES,Side='top')
-    features_checklist.grid(row=0, column=1,padx=50)
-    
+    features_checklist = ChecklistBox(features_frame, FEATURES, Side='top')
+    features_checklist.grid(row=0, column=1, padx=50)
+
 
 def initialize_classes_frame(classes_frame: tk.Frame):
     tk.Label(classes_frame, text="Choose two classes: ").grid(row=0, column=0)
-    classes_checklist=ChecklistBox(classes_frame,CLASSES,Side='top')
-    classes_checklist.grid(row=0, column=1,padx=50)
+    classes_checklist = ChecklistBox(classes_frame, CLASSES, Side='top')
+    classes_checklist.grid(row=0, column=1, padx=50)
 
 
 def initialize_misc_frame(misc_frame: tk.Frame):
-    tk.Label(misc_frame, text="Enter learning rate: ").grid(row=0, column=0)
-    tk.Entry(misc_frame, width=10, font='Arial 14').grid(row=0, column=1)
+    text_box_width = 5
 
-#
-# def initialize_starting_frame(window):
-#     main_frame.pack(fill="both", expand=1)
-#     tk.Label(main_frame, text="elSayadAi.com", fg="red", width=30).grid(0, 0)
-#     btn = tk.Button(main_frame, text='Click me',
-#                     width=20, command=lambda:change_frame(results_frame, main_frame)).place(x=40, y=50)
-#
-# def initialize_results_frame(window):
-#     tk.Label(results_frame, text="of", fg="red", width=30).place(x=10, y = 10)
-#
-# def change_frame(x, y):
-#     x.pack(fill="both", expand=1)
-#     y.forget()
+    misc_frame.grid_rowconfigure(10, weight=1)
+    misc_frame.grid_columnconfigure(10, weight=1)
+
+    tk.Label(misc_frame, text="Enter learning rate: ").grid(row=0, column=0)
+    tk.Entry(misc_frame, width=text_box_width, font='Arial 14').grid(row=0, column=1, padx=10)
+
+    tk.Label(misc_frame, text="Epochs: ").grid(row=0, column=2)
+    tk.Entry(misc_frame, width=text_box_width, font='Arial 14').grid(row=0, column=3, padx=10)
+
+    var = tk.BooleanVar(value=False)
+    tk.Checkbutton(misc_frame, var=var, text="Bias",
+                   onvalue=True, offvalue=False,
+                   anchor="w", width=10,
+                   relief="flat", highlightthickness=0).grid(row=0, column=4, padx=10)
+
+
+def initialize_buttons_frame(buttons_frame: tk.Frame):
+    train = tk.Button(buttons_frame, text="Train", command=train_button)
+    train.grid(row=0, column=0, padx=20)
+
+    test = tk.Button(buttons_frame, text="Test", command=test_button, state=tk.DISABLED)
+    test.grid(row=0, column=1, padx=20)
+
+    retrain = tk.Button(buttons_frame, text="reTrain", command=retrain_button, state=tk.DISABLED)
+    retrain.grid(row=0, column=2, padx=20)
 
 
 class ChecklistBox(tk.Frame):
@@ -85,18 +96,18 @@ class ChecklistBox(tk.Frame):
                                 onvalue=choice, offvalue="",
                                 anchor="w", width=10, background=bg,
                                 relief="flat", highlightthickness=0
-            )
+                                )
             cb.deselect()
             cb.pack(side=Side, fill="x", anchor="w")
-
 
     def getCheckedItems(self):
         values = []
         for var in self.vars:
-            value =  var.get()
+            value = var.get()
             if value:
                 values.append(value)
         print(values)
         return values
-run_gui()
 
+
+run_gui()

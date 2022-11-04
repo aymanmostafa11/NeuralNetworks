@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from Activations import sig_num
+from models.Activations import sig_num
 
 
 class Perceptron:
