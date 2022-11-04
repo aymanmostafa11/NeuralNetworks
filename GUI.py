@@ -22,7 +22,6 @@ def run_gui():
     initialize_misc_frame(frames['MISC'])
     initialize_buttons_frame(frames['BUTTONS'])
 
-
     main_window.mainloop()
 
 
