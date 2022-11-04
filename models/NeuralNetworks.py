@@ -41,7 +41,6 @@ class Perceptron:
                 error = Y[i] - prediction
                 self.__weights += (self.__learning_rate * error * sample)
 
-
     def predict(self, X):
         """
         :param X: Dataframe of samples.
@@ -49,3 +48,6 @@ class Perceptron:
         """
         vectorized_activation = np.vectorize(self.__activation)
         return vectorized_activation(np.dot(self.__weights, X.T))
+
+    def update_hyper_parameters(self):
+        pass

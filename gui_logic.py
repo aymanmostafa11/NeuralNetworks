@@ -1,17 +1,24 @@
+import pandas as pd
+
 from DataManager import prep_data
 from models.NeuralNetworks import Perceptron
 
+__model__ : Perceptron
+X : pd.DataFrame
+Y : pd.DataFrame
 
-def train_button():
+def fit_model(features: list, classes: list, hyper_parameters: dict):
     data = prep_data()
-    model = Perceptron(learning_rate=0.1, epochs=10)
+    __model__ = Perceptron(learning_rate=0.1, epochs=10)
     Y = data['body_mass_g']
     X = data.drop('body_mass_g', axis=1)
-    model.fit(X, Y)
-
-def retrain_button():
-    pass
+    __model__.fit(X, Y)
 
 
-def test_button():
+def retrain_model():
+    __model__.fit(X, Y)
+
+
+def test_model():
+    # TODO : add testing logic
     pass
