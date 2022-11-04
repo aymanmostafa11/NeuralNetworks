@@ -1,4 +1,6 @@
 import tkinter as tk
+import tkinter.messagebox
+
 import matplotlib.pyplot as plt
 from gui_logic import *
 
@@ -6,13 +8,18 @@ ROWS = {'FEATURES': 0, 'CLASSES': 1, "MISC": 2, "BUTTONS": 3}
 WINDOW_SIZE = "800x600"
 FEATURES = ('bill_length', 'bill_depth', 'flipper_length', 'gender', 'body_mass')
 CLASSES = ('C1', 'C2', 'C3')
-# TODO: Create GUI
+check_lists = {}
+buttons = {}
+hyper_parameters = {}
+help_message = None
 
 main_window = tk.Tk()
 main_frame = tk.Frame(main_window)
 main_frame.pack(fill="both", expand=1)
 results_frame = tk.Frame(main_window)
 
+
+# TODO: add show visualization logic
 
 def run_gui():
     initialize_window(main_window)
@@ -21,6 +28,9 @@ def run_gui():
     initialize_classes_frame(frames['CLASSES'])
     initialize_misc_frame(frames['MISC'])
     initialize_buttons_frame(frames['BUTTONS'])
+
+    # help_message = tk.Label(main_frame, text= "Help Text", foreground="red")
+    # help_message.grid(row=len(ROWS) + 1, column=0)
 
     main_window.mainloop()
 
@@ -36,21 +46,21 @@ def initialize_window(window):
 def initialize_frames(parent_frame: tk.Frame):
     frames = {}
     for name, row_index in ROWS.items():
-        frames[name] = tk.Frame(parent_frame, highlightbackground="black", highlightthickness=1)
+        frames[name] = tk.Frame(parent_frame, highlightbackground="black", highlightthickness=1, name=str.lower(name))
         frames[name].grid(row=row_index, column=0)
     return frames
 
 
 def initialize_features_frame(features_frame: tk.Frame):
     tk.Label(features_frame, text="Choose two features: ").grid(row=0, column=0)
-    features_checklist = ChecklistBox(features_frame, FEATURES, Side='top')
-    features_checklist.grid(row=0, column=1, padx=50)
+    check_lists['features'] = ChecklistBox(features_frame, FEATURES, Side='top')
+    check_lists['features'].grid(row=0, column=1, padx=50)
 
 
 def initialize_classes_frame(classes_frame: tk.Frame):
     tk.Label(classes_frame, text="Choose two classes: ").grid(row=0, column=0)
-    classes_checklist = ChecklistBox(classes_frame, CLASSES, Side='top')
-    classes_checklist.grid(row=0, column=1, padx=50)
+    check_lists['classes'] = ChecklistBox(classes_frame, CLASSES, Side='top')
+    check_lists['classes'].grid(row=0, column=1, padx=50)
 
 
 def initialize_misc_frame(misc_frame: tk.Frame):
@@ -60,27 +70,66 @@ def initialize_misc_frame(misc_frame: tk.Frame):
     misc_frame.grid_columnconfigure(10, weight=1)
 
     tk.Label(misc_frame, text="Enter learning rate: ").grid(row=0, column=0)
-    tk.Entry(misc_frame, width=text_box_width, font='Arial 14').grid(row=0, column=1, padx=10)
+    hyper_parameters['lr'] = tk.Entry(misc_frame, width=text_box_width, font='Arial 14')
+    hyper_parameters['lr'].grid(row=0, column=1, padx=10)
 
     tk.Label(misc_frame, text="Epochs: ").grid(row=0, column=2)
-    tk.Entry(misc_frame, width=text_box_width, font='Arial 14').grid(row=0, column=3, padx=10)
+    hyper_parameters['epochs'] = tk.Entry(misc_frame, width=text_box_width, font='Arial 14')
+    hyper_parameters['epochs'].grid(row=0, column=3, padx=10)
 
     var = tk.BooleanVar(value=False)
-    tk.Checkbutton(misc_frame, var=var, text="Bias",
-                   onvalue=True, offvalue=False,
-                   anchor="w", width=10,
-                   relief="flat", highlightthickness=0).grid(row=0, column=4, padx=10)
+    hyper_parameters['bias'] = tk.Checkbutton(misc_frame, var=var, text="Bias",
+                                              onvalue=True, offvalue=False,
+                                              anchor="w", width=10,
+                                              relief="flat", highlightthickness=0)
+    hyper_parameters['bias'].grid(row=0, column=4, padx=10)
 
 
 def initialize_buttons_frame(buttons_frame: tk.Frame):
-    train = tk.Button(buttons_frame, text="Train", command=train_button)
-    train.grid(row=0, column=0, padx=20)
+    buttons['train'] = tk.Button(buttons_frame, text="Train", command=train_button)
+    buttons['train'].grid(row=0, column=0, padx=20)
 
-    test = tk.Button(buttons_frame, text="Test", command=test_button, state=tk.DISABLED)
-    test.grid(row=0, column=1, padx=20)
+    buttons['test'] = tk.Button(buttons_frame, text="Test", command=test_button, state=tk.DISABLED)
+    buttons['test'].grid(row=0, column=1, padx=20)
 
-    retrain = tk.Button(buttons_frame, text="reTrain", command=retrain_button, state=tk.DISABLED)
-    retrain.grid(row=0, column=2, padx=20)
+    buttons['retrain'] = tk.Button(buttons_frame, text="reTrain", command=retrain_button, state=tk.DISABLED)
+    buttons['retrain'].grid(row=0, column=2, padx=20)
+
+
+####################
+# Buttons
+####################
+def train_button():
+    # verify data
+    choosen_features = check_lists['features'].getCheckedItems()
+    choosen_classes = check_lists['classes'].getCheckedItems()
+
+    if not valid_input(choosen_features, choosen_classes):
+        return
+
+    # fit model
+    fit_model(choosen_features, choosen_classes, hyper_parameters)
+    tk.messagebox.showinfo(title="Model Fitted", message="Model Finished Fitting")
+
+    # enable other buttons
+    buttons['test'].config(state=tk.NORMAL)
+    buttons['retrain'].config(state=tk.NORMAL)
+
+
+def test_button():
+    test_model()
+
+
+def retrain_button():
+    retrain_model()
+
+
+def valid_input(features, classes):
+    if len(features) != 2 or len(classes) != 2:
+        tk.messagebox.showerror(title="Invalid Parameters",
+                                message="Error in number of features or classes selected, pleases select exactly 2 features and 2 classes")
+        return 0
+    return 1
 
 
 class ChecklistBox(tk.Frame):
