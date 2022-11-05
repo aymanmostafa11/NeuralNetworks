@@ -1,8 +1,8 @@
+import matplotlib.pyplot as plt
 import tkinter as tk
 import tkinter.messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from gui_logic import *
@@ -13,16 +13,15 @@ FEATURES = ('bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'gender', 'b
 CLASSES = ('Adelie', 'Gentoo', 'Chinstrap')
 check_lists = {}
 buttons = {}
-hyper_parameters = {}
+hyper_parameters_widgets = {}
 help_message = None
+
 main_window = tk.Tk()
 main_frame = tk.Frame(main_window)
-Visualization_frame = tk.Frame(main_window)
+visualization_frame: tk.Frame
 main_frame.pack(fill="both", expand=1)
 results_frame = tk.Frame(main_window)
 
-
-# TODO: add show visualization logic
 
 def run_gui():
     initialize_window(main_window)
@@ -34,6 +33,7 @@ def run_gui():
 
     # help_message = tk.Label(main_frame, text= "Help Text", foreground="red")
     # help_message.grid(row=len(ROWS) + 1, column=0)
+
 
     main_window.mainloop()
 
@@ -56,7 +56,7 @@ def initialize_frames(parent_frame: tk.Frame):
 
 def initialize_features_frame(features_frame: tk.Frame):
     tk.Label(features_frame, text="Choose two features: ").grid(row=0, column=0)
-    check_lists['features'] = ChecklistBox(features_frame, FEATURES, Side='top')
+    check_lists['features'] = ChecklistBox(features_frame, FEATURES, Side='top', )
     check_lists['features'].grid(row=0, column=1, padx=50)
 
 
@@ -68,24 +68,26 @@ def initialize_classes_frame(classes_frame: tk.Frame):
 
 def initialize_misc_frame(misc_frame: tk.Frame):
     text_box_width = 5
+    text_font = 'Arial 12'
 
     misc_frame.grid_rowconfigure(10, weight=1)
     misc_frame.grid_columnconfigure(10, weight=1)
 
     tk.Label(misc_frame, text="Enter learning rate: ").grid(row=0, column=0)
-    hyper_parameters['lr'] = tk.Entry(misc_frame, width=text_box_width, font='Arial 14')
-    hyper_parameters['lr'].grid(row=0, column=1, padx=10)
+    hyper_parameters_widgets['lr'] = tk.Entry(misc_frame, width=text_box_width, font=text_font,
+                                              textvariable=tk.StringVar(misc_frame, "0.005"))
+    hyper_parameters_widgets['lr'].grid(row=0, column=1, padx=10)
 
     tk.Label(misc_frame, text="Epochs: ").grid(row=0, column=2)
-    hyper_parameters['epochs'] = tk.Entry(misc_frame, width=text_box_width, font='Arial 14')
-    hyper_parameters['epochs'].grid(row=0, column=3, padx=10)
+    hyper_parameters_widgets['epochs'] = tk.Entry(misc_frame, width=text_box_width, font=text_font,
+                                                  textvariable=tk.StringVar(misc_frame, "100"))
+    hyper_parameters_widgets['epochs'].grid(row=0, column=3, padx=10)
 
-    var = tk.BooleanVar(value=False)
-    hyper_parameters['bias'] = tk.Checkbutton(misc_frame, var=var, text="Bias",
-                                              onvalue=True, offvalue=False,
-                                              anchor="w", width=10,
-                                              relief="flat", highlightthickness=0)
-    hyper_parameters['bias'].grid(row=0, column=4, padx=10)
+    hyper_parameters_widgets['bias'] = tk.BooleanVar(value=False)
+    tk.Checkbutton(misc_frame, variable=hyper_parameters_widgets['bias'], text="Bias",
+                   onvalue=True, offvalue=False,
+                   anchor="w", width=10,
+                   relief="flat", highlightthickness=0).grid(row=0, column=4, padx=10)
 
 
 def initialize_buttons_frame(buttons_frame: tk.Frame):
@@ -98,35 +100,36 @@ def initialize_buttons_frame(buttons_frame: tk.Frame):
     buttons['retrain'] = tk.Button(buttons_frame, text="reTrain", width=20 ,command=retrain_button, state=tk.DISABLED)
     buttons['retrain'].grid(row=0, column=2, padx=20)
 
-    buttons['plot'] = tk.Button(buttons_frame, text="Plot", width=20 ,command=plot_button)
+    buttons['plot'] = tk.Button(buttons_frame, text="Plot", width=20, command=plot_button, state=tk.NORMAL) #TODO : change back
     buttons['plot'].grid(row=0, column=3, padx=20)
-    
-def initialize_Visualization_frame(Visualization_frame: tk.Frame,data):
-  # the figure that will contain the plot
-    fig = Figure(figsize = (5, 5),
-                 dpi = 100)     
-                 
-    Y = data['species']
-    class1 = data.loc[Y == 1]
-    class2 = data.loc[Y == -1]
+
+
+def initialize_Visualization_frame(data):
+    global visualization_frame
+    visualization_frame = tk.Frame(main_window)
+    # the figure that will contain the plot
+    fig = Figure(figsize=(5, 5), dpi=100)
+
+    X, Y = data.drop(["species"], axis=1), data['species']
+    w = get_model_weights()
+
     # adding the subplot
-    plot1 = fig.add_subplot(111)
-    plot1.scatter(class1, class2)
-    # plotting the graph
-  
-    # creating the Tkinter canvas
-    # containing the Matplotlib figure
-    canvas = FigureCanvasTkAgg(fig,
-                               master = Visualization_frame)  
+    ax = fig.add_subplot(111)
+    sns.scatterplot(x=X.iloc[:, 0], y=X.iloc[:, 1], hue=Y, ax=ax)
+
+    # Calculate boundary line
+    x_vals = np.array(ax.get_xlim())
+    y_vals = - (x_vals * w[1] + w[0]) / w[2]
+
+    # draw boundary line
+    ax.plot(x_vals, y_vals, c='red')
+
+    canvas = FigureCanvasTkAgg(fig, master=visualization_frame)
     canvas.draw()
-  
-    # placing the canvas on the Tkinter window
     canvas.get_tk_widget().pack()
-  
-   
-    # placing the toolbar on the Tkinter window
-    canvas.get_tk_widget().pack()
-  
+
+    # return button
+    tk.Button(visualization_frame, text="return", command=lambda: switch_frames(main_frame, visualization_frame)).pack()
 
 
 ####################
@@ -136,21 +139,21 @@ def train_button():
     # verify data
     choosen_features = check_lists['features'].getCheckedItems()
     choosen_classes = check_lists['classes'].getCheckedItems()
-    hyper_parameters['epochs']=int(hyper_parameters['epochs'].get())
-    hyper_parameters['lr']=float(hyper_parameters['lr'].get())
+    #choosen_features = ['bill_length_mm', "bill_depth_mm"]
+    #choosen_classes = ["Adelie", "Gentoo"]
 
-
-    if not valid_input(choosen_features, choosen_classes):
+    if not valid_input(choosen_features, choosen_classes, hyper_parameters_widgets):
         return
     # fit model
-    global data 
-    data=fit_model(choosen_features, choosen_classes, hyper_parameters)
+    global data
+    data = fit_model(choosen_features, choosen_classes, {'lr': float(hyper_parameters_widgets['lr'].get()),
+                                                         'epochs': int(hyper_parameters_widgets['epochs'].get()),
+                                                         'bias': hyper_parameters_widgets['bias'].get()})
     tk.messagebox.showinfo(title="Model Fitted", message="Model Finished Fitting")
     # enable other buttons
     buttons['test'].config(state=tk.NORMAL)
     buttons['retrain'].config(state=tk.NORMAL)
     buttons['plot'].config(state=tk.NORMAL)
-
 
 
 def test_button():
@@ -160,16 +163,29 @@ def test_button():
 def retrain_button():
     retrain_model()
 
+
 def plot_button():
-    initialize_Visualization_frame(Visualization_frame,data)
-    Visualization_frame.pack(fill="both", expand=1)
-    main_frame.forget()
+    initialize_Visualization_frame(data)
+    switch_frames(visualization_frame, main_frame, destroy=False)
 
 
-def valid_input(features, classes):
+##################
+#### Helpers  ####
+##################
+
+def valid_input(features, classes, hyper_parameters):
     if len(features) != 2 or len(classes) != 2:
         tk.messagebox.showerror(title="Invalid Parameters",
-                                message="Error in number of features or classes selected, pleases select exactly 2 features and 2 classes")
+                                message="Error in number of features or classes selected\n"
+                                        "Please select exactly 2 features and 2 classes")
+        return 0
+
+    try:
+        float(hyper_parameters['lr'].get())
+        int(hyper_parameters['epochs'].get())
+    except:
+        tk.messagebox.showerror(title="Invalid Parameters",
+                                message="Learning rate should be between 0 and 1,\nEpochs should be an integer > 0")
         return 0
     return 1
 
@@ -182,7 +198,7 @@ class ChecklistBox(tk.Frame):
         for choice in choices:
             var = tk.StringVar(value=choice)
             self.vars.append(var)
-            cb = tk.Checkbutton(self, var=var, text=choice,
+            cb = tk.Checkbutton(self, variable=var, text=choice,
                                 onvalue=choice, offvalue="",
                                 anchor="w", width=10, background=bg,
                                 relief="flat", highlightthickness=0
@@ -196,8 +212,14 @@ class ChecklistBox(tk.Frame):
             value = var.get()
             if value:
                 values.append(value)
-        print(values)
         return values
 
+
+def switch_frames(to_focus: tk.Frame, to_forget: tk.Frame, destroy=True):
+    to_forget.forget()
+    if destroy:
+        to_forget.destroy()
+
+    to_focus.pack(fill="both", expand=1)
 
 run_gui()

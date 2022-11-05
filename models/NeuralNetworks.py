@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 from models.Activations import *
+from Utils import accuracy_score
 
+RANDOM_SEED = 42
 
 class Perceptron:
     __activation = None
@@ -22,8 +24,9 @@ class Perceptron:
         self.__learning_rate = learning_rate
         self.__epochs = epochs
         self.__bias = bias
+        self.__random_generator__ = np.random.RandomState(RANDOM_SEED)
 
-    def fit(self, X, Y):
+    def fit(self, X, Y, verbose=True):
 
         if self.__bias is True:
             X.insert(0, "bias", np.ones(X.shape[0]))
@@ -31,7 +34,7 @@ class Perceptron:
         features_count = X.shape[1]
         samples_count = X.shape[0]
 
-        self.__weights = np.random.rand(1, features_count)
+        self.__weights = self.__random_generator__.rand(1, features_count)
 
         for epoch in range(self.__epochs):
             for i in range(samples_count):
@@ -40,6 +43,10 @@ class Perceptron:
                 prediction = self.__activation(activation)
                 error = Y[i] - prediction
                 self.__weights += (self.__learning_rate * error * sample)
+
+            if verbose and epoch % 10 == 0:
+                acc = accuracy_score(Y, np.squeeze(self.predict(X)), verbose=False)
+                print(f"Epoch : {epoch}, accuracy : {acc}")
 
     def predict(self, X):
         """
@@ -51,3 +58,6 @@ class Perceptron:
 
     def update_hyper_parameters(self):
         pass
+
+    def get_weights(self):
+        return self.__weights

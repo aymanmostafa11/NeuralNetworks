@@ -49,7 +49,7 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, label_dict=None, ve
     return result
 
 
-def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray, verbose=True):
+def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray, verbose=False):
     acc = round( sum(y_true == y_pred) / len(y_true) * 100, 2)
     if verbose:
         print(acc)

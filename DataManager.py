@@ -1,20 +1,17 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-# TODO : add data reading, preprocessing
 
 encoder = LabelEncoder()
 filepath = "data/penguins.csv"
 
 
-# TODO: create function to get train or test data
-
-def prep_data(classes,features):
+def prep_data(classes, features):
     data = read()
-    featuresToDrop = [feature for feature in  data.columns.drop("species") if feature not in features]
-    data.drop(featuresToDrop,inplace = True , axis = 1)
+    featuresToDrop = [feature for feature in data.columns.drop("species") if feature not in features]
+    data.drop(featuresToDrop, inplace=True, axis=1)
     data = preprocessing(data, data.columns.drop("species"))
-    data = encodeTargets(data,classes)
-    
+    data = encodeTargets(data, classes)
+    # TODO : return split data
     return data
 
 
@@ -23,7 +20,7 @@ def read():
     return penguins
 
 
-def preprocessing(data, dataFeatures, test=False):
+def preprocessing(data,dataFeatures , test=False):
     for feature in dataFeatures:
         if data[feature].dtypes == object:
             data[feature].fillna(data[feature].mode()[0])
@@ -47,23 +44,24 @@ def encodeTargets(data,classes):
     return data
 
 
-def split(data,features):
-   
-       
-       trainData_for_class_0 = data[data["species"] == -1][:30]
-       trainData_for_class_1 = data[data["species"] == 1][:30] 
-       trainData = trainData_for_class_0.append(trainData_for_class_1)
-       
-       X_train = trainData.drop("species",axis = 1)
-       Y_train = trainData["species"]
+def split(data):
+    """
 
-       testData_for_class_0 = data[data["species"] == -1][30:]
-       testData_for_class_1 = data[data["species"] == 1][30:] 
-       testData = testData_for_class_0.append(testData_for_class_1)
-       
-       X_test = testData.drop("species",axis = 1)
-       Y_test = testData["species"]
+    :param data:
+    :return: x_train, x_test, y_train, y_test
+    """
+    trainData_for_class_0 = data[data["species"] == -1][:30]
+    trainData_for_class_1 = data[data["species"] == 1][:30]
+    trainData = trainData_for_class_0.append(trainData_for_class_1)
 
-       
-       
-       return X_train,X_test,Y_train,Y_test
+    X_train = trainData.drop("species", axis=1)
+    Y_train = trainData["species"]
+
+    testData_for_class_0 = data[data["species"] == -1][30:]
+    testData_for_class_1 = data[data["species"] == 1][30:]
+    testData = testData_for_class_0.append(testData_for_class_1)
+
+    X_test = testData.drop("species", axis=1)
+    Y_test = testData["species"]
+
+    return X_train, X_test, Y_train, Y_test
