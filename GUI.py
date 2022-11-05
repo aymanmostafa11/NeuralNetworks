@@ -9,7 +9,7 @@ from gui_logic import *
 
 ROWS = {'FEATURES': 0, 'CLASSES': 1, "MISC": 2, "BUTTONS": 3}
 WINDOW_SIZE = "800x600"
-FEATURES = ('bill_length', 'bill_depth', 'flipper_length', 'gender', 'body_mass')
+FEATURES = ('bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'gender', 'body_mass_g')
 CLASSES = ('Adelie', 'Gentoo', 'Chinstrap')
 check_lists = {}
 buttons = {}
@@ -104,7 +104,8 @@ def initialize_buttons_frame(buttons_frame: tk.Frame):
 def initialize_Visualization_frame(Visualization_frame: tk.Frame,data):
   # the figure that will contain the plot
     fig = Figure(figsize = (5, 5),
-                 dpi = 100)
+                 dpi = 100)     
+                 
     Y = data['species']
     class1 = data.loc[Y == 1]
     class2 = data.loc[Y == -1]

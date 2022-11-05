@@ -14,6 +14,7 @@ def prep_data(classes,features):
     data.drop(featuresToDrop,inplace = True , axis = 1)
     data = preprocessing(data, data.columns.drop("species"))
     data = encodeTargets(data,classes)
+    
     return data
 
 
