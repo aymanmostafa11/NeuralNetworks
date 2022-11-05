@@ -1,7 +1,10 @@
 import tkinter as tk
 import tkinter.messagebox
-
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 from gui_logic import *
 
 ROWS = {'FEATURES': 0, 'CLASSES': 1, "MISC": 2, "BUTTONS": 3}
@@ -12,9 +15,9 @@ check_lists = {}
 buttons = {}
 hyper_parameters = {}
 help_message = None
-
 main_window = tk.Tk()
 main_frame = tk.Frame(main_window)
+Visualization_frame = tk.Frame(main_window)
 main_frame.pack(fill="both", expand=1)
 results_frame = tk.Frame(main_window)
 
@@ -86,14 +89,43 @@ def initialize_misc_frame(misc_frame: tk.Frame):
 
 
 def initialize_buttons_frame(buttons_frame: tk.Frame):
-    buttons['train'] = tk.Button(buttons_frame, text="Train", command=train_button)
+    buttons['train'] = tk.Button(buttons_frame, text="Train",width=20 ,command=train_button)
     buttons['train'].grid(row=0, column=0, padx=20)
 
-    buttons['test'] = tk.Button(buttons_frame, text="Test", command=test_button, state=tk.DISABLED)
+    buttons['test'] = tk.Button(buttons_frame, text="Test",width=20 , command=test_button, state=tk.DISABLED)
     buttons['test'].grid(row=0, column=1, padx=20)
 
-    buttons['retrain'] = tk.Button(buttons_frame, text="reTrain", command=retrain_button, state=tk.DISABLED)
+    buttons['retrain'] = tk.Button(buttons_frame, text="reTrain", width=20 ,command=retrain_button, state=tk.DISABLED)
     buttons['retrain'].grid(row=0, column=2, padx=20)
+
+    buttons['plot'] = tk.Button(buttons_frame, text="Plot", width=20 ,command=plot_button)
+    buttons['plot'].grid(row=0, column=3, padx=20)
+    
+def initialize_Visualization_frame(Visualization_frame: tk.Frame,data):
+  # the figure that will contain the plot
+    fig = Figure(figsize = (5, 5),
+                 dpi = 100)
+    Y = data['species']
+    class1 = data.loc[Y == 1]
+    class2 = data.loc[Y == -1]
+    # adding the subplot
+    plot1 = fig.add_subplot(111)
+    plot1.scatter(class1, class2)
+    # plotting the graph
+  
+    # creating the Tkinter canvas
+    # containing the Matplotlib figure
+    canvas = FigureCanvasTkAgg(fig,
+                               master = Visualization_frame)  
+    canvas.draw()
+  
+    # placing the canvas on the Tkinter window
+    canvas.get_tk_widget().pack()
+  
+   
+    # placing the toolbar on the Tkinter window
+    canvas.get_tk_widget().pack()
+  
 
 
 ####################
@@ -103,17 +135,21 @@ def train_button():
     # verify data
     choosen_features = check_lists['features'].getCheckedItems()
     choosen_classes = check_lists['classes'].getCheckedItems()
+    hyper_parameters['epochs']=int(hyper_parameters['epochs'].get())
+    hyper_parameters['lr']=float(hyper_parameters['lr'].get())
+
 
     if not valid_input(choosen_features, choosen_classes):
         return
-
     # fit model
-    fit_model(choosen_features, choosen_classes, hyper_parameters)
+    global data 
+    data=fit_model(choosen_features, choosen_classes, hyper_parameters)
     tk.messagebox.showinfo(title="Model Fitted", message="Model Finished Fitting")
-
     # enable other buttons
     buttons['test'].config(state=tk.NORMAL)
     buttons['retrain'].config(state=tk.NORMAL)
+    buttons['plot'].config(state=tk.NORMAL)
+
 
 
 def test_button():
@@ -122,6 +158,11 @@ def test_button():
 
 def retrain_button():
     retrain_model()
+
+def plot_button():
+    initialize_Visualization_frame(Visualization_frame,data)
+    Visualization_frame.pack(fill="both", expand=1)
+    main_frame.forget()
 
 
 def valid_input(features, classes):

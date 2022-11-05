@@ -10,9 +10,10 @@ filepath = "data/penguins.csv"
 
 def prep_data(classes,features):
     data = read()
+    featuresToDrop = [feature for feature in  data.columns.drop("species") if feature not in features]
+    data.drop(featuresToDrop,inplace = True , axis = 1)
     data = preprocessing(data, data.columns.drop("species"))
     data = encodeTargets(data,classes)
-    
     return data
 
 
@@ -46,8 +47,7 @@ def encodeTargets(data,classes):
 
 
 def split(data,features):
-       featuresToDrop = [feature for feature in  data.columns.drop("species") if feature not in features]
-       data.drop(featuresToDrop,inplace = True , axis = 1)
+   
        
        trainData_for_class_0 = data[data["species"] == -1][:30]
        trainData_for_class_1 = data[data["species"] == 1][:30] 
