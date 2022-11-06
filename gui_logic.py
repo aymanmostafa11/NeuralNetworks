@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from DataManager import prep_data, get_viz_data
 from models.NeuralNetworks import Perceptron
-from Utils import accuracy_score
+from Utils import accuracy_score, confusion_matrix
 
 __model__: Perceptron
 x_train: pd.DataFrame
@@ -25,17 +25,22 @@ def retrain_model():
     __model__.fit(x_train, y_train)
 
 
-def test_model(train_only=False):
+def test_model(classes=None, train_only=False):
     """
-
-    :return: train accuracy score and test accuracy score
+    :return: train accuracy score, test accuracy score and confusion matrix
     """
 
     train_acc = accuracy_score(y_train.values, __model__.predict(x_train))
     if train_only:
         return train_acc
-    test_acc = accuracy_score(y_test.values, __model__.predict(x_test))
-    return train_acc, test_acc
+
+    test_pred = __model__.predict(x_test)
+    test_acc = accuracy_score(y_test.values, test_pred)
+
+    conf_mat = confusion_matrix(y_test.values, test_pred,
+                                {"pos": classes[1], "neg": classes[0]},
+                                {"pos": 1, "neg": -1})
+    return train_acc, test_acc, conf_mat
 
 
 def get_model_weights():

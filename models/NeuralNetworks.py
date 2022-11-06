@@ -10,7 +10,6 @@ class Perceptron:
 
     def __init__(self, learning_rate, epochs, bias=True, activation=sig_num):
         """
-
         :param activation: The activation function to be used, default is sig_num().
         :param learning_rate: The Learning rate.
         :param epochs: Number of epochs.
@@ -19,6 +18,7 @@ class Perceptron:
         self.__activation = activation
         self.__learning_rate = learning_rate
         self.__epochs = epochs
+        self.__weights = None
         self.__bias = bias
         self.__random_generator__ = np.random.RandomState(RANDOM_SEED)
 
@@ -44,7 +44,7 @@ class Perceptron:
                 self.__weights += (self.__learning_rate * error * sample)
 
             if verbose and epoch % (self.__epochs / 10) == 0:
-                acc = accuracy_score(Y, np.squeeze(self.predict(X)), verbose=False)
+                acc = accuracy_score(Y.values, np.squeeze(self.predict(X)), verbose=False)
                 print(f"Epoch : {epoch}, accuracy : {acc}")
 
     def predict(self, X):

@@ -105,6 +105,8 @@ def initialize_buttons_frame(buttons_frame: tk.Frame):
     buttons['plot'].grid(row=0, column=3, padx=20)
 
 
+
+
 def initialize_Visualization_frame(data):
     global visualization_frame
     visualization_frame = tk.Frame(main_window)
@@ -150,7 +152,7 @@ def train_button():
     fit_model(choosen_features, choosen_classes, {'lr': float(hyper_parameters_widgets['lr'].get()),
                                                   'epochs': int(hyper_parameters_widgets['epochs'].get()),
                                                   'bias': hyper_parameters_widgets['bias'].get()})
-    tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy {test_model(True)}")
+    tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy {test_model(train_only=True)}")
     # enable other buttons
     buttons['test'].config(state=tk.NORMAL)
     buttons['retrain'].config(state=tk.NORMAL)
@@ -158,10 +160,11 @@ def train_button():
 
 
 def test_button():
-    train_acc, test_acc = test_model()
+    train_acc, test_acc, conf_mat = test_model(CLASSES)
     tk.messagebox.showinfo("Model Tested",
                            f"Model Accuracy on train data {train_acc}\n"
-                           f"Model Accuracy on test data {test_acc}")
+                           f"Model Accuracy on test data {test_acc}\n\n"
+                           f"Check Console for confusion matrix!")
 
 
 def retrain_button():
