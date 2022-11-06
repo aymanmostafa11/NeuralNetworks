@@ -6,6 +6,7 @@ from Utils import accuracy_score
 RANDOM_SEED = 42
 
 
+
 class Perceptron:
 
     def __init__(self, learning_rate, epochs, bias=True, activation=sig_num):
@@ -23,7 +24,7 @@ class Perceptron:
         self.__random_generator__ = np.random.RandomState(RANDOM_SEED)
 
     def fit(self, X: pd.DataFrame, Y: pd.DataFrame, verbose=True):
-
+        # TODO : change epochs to be included in here instead of init
         X = X.copy(deep=True)  # to prevent adding bias from editing original data
         Y = Y.copy(deep=True)
 
