@@ -6,13 +6,16 @@ filepath = "data/penguins.csv"
 
 
 def prep_data(classes, features):
+    """
+    :return: x_train, x_test, y_train, y_test
+    """
     data = read()
     featuresToDrop = [feature for feature in data.columns.drop("species") if feature not in features]
     data.drop(featuresToDrop, inplace=True, axis=1)
     data = preprocessing(data, data.columns.drop("species"))
     data = encodeTargets(data, classes)
-    # TODO : return split data
-    return data
+
+    return split_and_shuffle(data)
 
 
 def read():
@@ -20,7 +23,7 @@ def read():
     return penguins
 
 
-def preprocessing(data,dataFeatures , test=False):
+def preprocessing(data, dataFeatures, test=False):
     for feature in dataFeatures:
         if data[feature].dtypes == object:
             data[feature].fillna(data[feature].mode()[0])
@@ -44,10 +47,28 @@ def encodeTargets(data,classes):
     return data
 
 
+def split_and_shuffle(data, equal_samples_per_class=False, train_size=0.7):
+    """
+    :return: x_train, x_test, y_train, y_test
+    """
+    data = data.sample(frac=1)  # suffle
+
+    if equal_samples_per_class:
+        return split(data)
+
+    train_count = int(train_size * data.shape[0])
+
+    train = data.iloc[:train_count, :]
+    test = data.iloc[train_count:, :]
+
+    x_train, y_train = train.drop(['species'], axis=1), train['species']
+    x_test, y_test = test.drop(['species'], axis=1), test['species']
+
+    return x_train, x_test, y_train, y_test
+
+
 def split(data):
     """
-
-    :param data:
     :return: x_train, x_test, y_train, y_test
     """
     trainData_for_class_0 = data[data["species"] == -1][:30]
@@ -65,3 +86,16 @@ def split(data):
     Y_test = testData["species"]
 
     return X_train, X_test, Y_train, Y_test
+
+
+def get_viz_data(classes, features):
+    """
+    :return: data without encoding targets and splitting
+    """
+    data = read()
+    featuresToDrop = [feature for feature in data.columns.drop("species") if feature not in features]
+    data.drop(featuresToDrop, inplace=True, axis=1)
+    data = preprocessing(data, data.columns.drop("species"))
+    data = data[(data['species'] == classes[0]) | (data['species'] == classes[1])]
+    return data
+

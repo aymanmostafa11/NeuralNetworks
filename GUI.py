@@ -6,6 +6,7 @@ from matplotlib.figure import Figure
 import seaborn as sns
 import numpy as np
 from gui_logic import *
+import gui_logic
 
 ROWS = {'FEATURES': 0, 'CLASSES': 1, "MISC": 2, "BUTTONS": 3}
 WINDOW_SIZE = "800x600"
@@ -14,7 +15,6 @@ CLASSES = ('Adelie', 'Gentoo', 'Chinstrap')
 check_lists = {}
 buttons = {}
 hyper_parameters_widgets = {}
-help_message = None
 
 main_window = tk.Tk()
 main_frame = tk.Frame(main_window)
@@ -31,9 +31,10 @@ def run_gui():
     initialize_misc_frame(frames['MISC'])
     initialize_buttons_frame(frames['BUTTONS'])
 
-    # help_message = tk.Label(main_frame, text= "Help Text", foreground="red")
-    # help_message.grid(row=len(ROWS) + 1, column=0)
-
+    help_message = tk.Label(main_frame,
+                            text="Don't forget to Train the model after changing parameters to get updated results",
+                            foreground="grey")
+    help_message.grid(row=len(ROWS) + 1, column=0)
 
     main_window.mainloop()
 
@@ -100,7 +101,7 @@ def initialize_buttons_frame(buttons_frame: tk.Frame):
     buttons['retrain'] = tk.Button(buttons_frame, text="reTrain", width=20 ,command=retrain_button, state=tk.DISABLED)
     buttons['retrain'].grid(row=0, column=2, padx=20)
 
-    buttons['plot'] = tk.Button(buttons_frame, text="Plot", width=20, command=plot_button, state=tk.NORMAL) #TODO : change back
+    buttons['plot'] = tk.Button(buttons_frame, text="Plot", width=20, command=plot_button, state=tk.DISABLED)
     buttons['plot'].grid(row=0, column=3, padx=20)
 
 
@@ -144,12 +145,12 @@ def train_button():
 
     if not valid_input(choosen_features, choosen_classes, hyper_parameters_widgets):
         return
+
     # fit model
-    global data
-    data = fit_model(choosen_features, choosen_classes, {'lr': float(hyper_parameters_widgets['lr'].get()),
-                                                         'epochs': int(hyper_parameters_widgets['epochs'].get()),
-                                                         'bias': hyper_parameters_widgets['bias'].get()})
-    tk.messagebox.showinfo(title="Model Fitted", message="Model Finished Fitting")
+    fit_model(choosen_features, choosen_classes, {'lr': float(hyper_parameters_widgets['lr'].get()),
+                                                  'epochs': int(hyper_parameters_widgets['epochs'].get()),
+                                                  'bias': hyper_parameters_widgets['bias'].get()})
+    tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy {test_model(True)}")
     # enable other buttons
     buttons['test'].config(state=tk.NORMAL)
     buttons['retrain'].config(state=tk.NORMAL)
@@ -157,15 +158,19 @@ def train_button():
 
 
 def test_button():
-    test_model()
+    train_acc, test_acc = test_model()
+    tk.messagebox.showinfo("Model Tested",
+                           f"Model Accuracy on train data {train_acc}\n"
+                           f"Model Accuracy on test data {test_acc}")
 
 
 def retrain_button():
-    retrain_model()
+    #retrain_model()
+    tk.messagebox.showinfo("Retrain Model", "Coming Soon :D")
 
 
 def plot_button():
-    initialize_Visualization_frame(data)
+    initialize_Visualization_frame(gui_logic.viz_data)
     switch_frames(visualization_frame, main_frame, destroy=False)
 
 
@@ -222,4 +227,3 @@ def switch_frames(to_focus: tk.Frame, to_forget: tk.Frame, destroy=True):
 
     to_focus.pack(fill="both", expand=1)
 
-run_gui()

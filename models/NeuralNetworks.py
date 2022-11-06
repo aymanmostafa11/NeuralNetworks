@@ -5,12 +5,8 @@ from Utils import accuracy_score
 
 RANDOM_SEED = 42
 
+
 class Perceptron:
-    __activation = None
-    __weights = None
-    __bias = None
-    __learning_rate = None
-    __epochs = None
 
     def __init__(self, learning_rate, epochs, bias=True, activation=sig_num):
         """
@@ -26,7 +22,10 @@ class Perceptron:
         self.__bias = bias
         self.__random_generator__ = np.random.RandomState(RANDOM_SEED)
 
-    def fit(self, X, Y, verbose=True):
+    def fit(self, X: pd.DataFrame, Y: pd.DataFrame, verbose=True):
+
+        X = X.copy(deep=True)  # to prevent adding bias from editing original data
+        Y = Y.copy(deep=True)
 
         if self.__bias is True:
             X.insert(0, "bias", np.ones(X.shape[0]))
@@ -41,10 +40,10 @@ class Perceptron:
                 sample = np.array(X.iloc[i])
                 activation = np.sum(sample * self.__weights)
                 prediction = self.__activation(activation)
-                error = Y[i] - prediction
+                error = Y.iloc[i] - prediction
                 self.__weights += (self.__learning_rate * error * sample)
 
-            if verbose and epoch % 10 == 0:
+            if verbose and epoch % (self.__epochs / 10) == 0:
                 acc = accuracy_score(Y, np.squeeze(self.predict(X)), verbose=False)
                 print(f"Epoch : {epoch}, accuracy : {acc}")
 
@@ -53,8 +52,12 @@ class Perceptron:
         :param X: Dataframe of samples.
         :return: numpy array of predictions.
         """
+        X = X.copy(deep=True)  # to prevent adding bias from editing original data
+        if self.__bias is True and "bias" not in X.columns:
+            X.insert(0, "bias", np.ones(X.shape[0]))
+
         vectorized_activation = np.vectorize(self.__activation)
-        return vectorized_activation(np.dot(self.__weights, X.T))
+        return np.squeeze(vectorized_activation(np.dot(self.__weights, X.T)))
 
     def update_hyper_parameters(self):
         pass
