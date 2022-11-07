@@ -1,16 +1,24 @@
 import tkinter as tk
+import tkinter.ttk as ttk
 import tkinter.messagebox
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import seaborn as sns
-import gui.logic # to access variables
+
+import gui.logic  # to access variables
 from gui.logic import *
 from gui.util import valid_input, ChecklistBox, switch_frames
 
-ROWS = {'FEATURES': 0, 'CLASSES': 1, "MISC": 2, "BUTTONS": 3}
 WINDOW_SIZE = "800x600"
+
+ROWS = {name: index for index, name in enumerate(['MODEL', 'FEATURES', 'CLASSES', 'MISC', 'BUTTONS'])}
 FEATURES = ('bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'gender', 'body_mass_g')
 CLASSES = ('Adelie', 'Gentoo', 'Chinstrap')
+AVAILABLE_MODELS = ["Perceptron", "Adaline", "MLP"]
+
+model_list: tk.Listbox
+selected_model = ""
 check_lists = {}
 buttons = {}
 hyper_parameters_widgets = {}
@@ -18,13 +26,14 @@ hyper_parameters_widgets = {}
 main_window = tk.Tk()
 main_frame = tk.Frame(main_window)
 visualization_frame: tk.Frame
-main_frame.pack(fill="both", expand=1)
+main_frame.pack(fill="y", expand=1)
 results_frame = tk.Frame(main_window)
 
 
 def run_gui():
     initialize_window(main_window)
     frames = initialize_frames(main_frame)
+    initialize_models_frame(frames["MODEL"])
     initialize_features_frame(frames['FEATURES'])
     initialize_classes_frame(frames['CLASSES'])
     initialize_misc_frame(frames['MISC'])
@@ -52,6 +61,15 @@ def initialize_frames(parent_frame: tk.Frame):
         frames[name] = tk.Frame(parent_frame, highlightbackground="black", highlightthickness=1, name=str.lower(name))
         frames[name].grid(row=row_index, column=0)
     return frames
+
+
+def initialize_models_frame(models_frame: tk.Frame):
+
+    tk.Label(models_frame, text="Choose a model: ").grid(row=0, column=0)
+    global model_list
+    model_list = ttk.OptionMenu(models_frame, tk.StringVar(models_frame), AVAILABLE_MODELS[0],
+                                *AVAILABLE_MODELS, command=switch_model)
+    model_list.grid(row=0, column=1)
 
 
 def initialize_features_frame(features_frame: tk.Frame):
@@ -91,19 +109,17 @@ def initialize_misc_frame(misc_frame: tk.Frame):
 
 
 def initialize_buttons_frame(buttons_frame: tk.Frame):
-    buttons['train'] = tk.Button(buttons_frame, text="Train",width=20 ,command=train_button)
+    buttons['train'] = ttk.Button(buttons_frame, text="Train",width=20 ,command=train_button)
     buttons['train'].grid(row=0, column=0, padx=20)
 
-    buttons['test'] = tk.Button(buttons_frame, text="Test",width=20 , command=test_button, state=tk.DISABLED)
+    buttons['test'] = ttk.Button(buttons_frame, text="Test",width=20 , command=test_button, state=tk.DISABLED)
     buttons['test'].grid(row=0, column=1, padx=20)
 
-    buttons['retrain'] = tk.Button(buttons_frame, text="reTrain", width=20 ,command=retrain_button, state=tk.DISABLED)
+    buttons['retrain'] = ttk.Button(buttons_frame, text="reTrain", width=20 ,command=retrain_button, state=tk.DISABLED)
     buttons['retrain'].grid(row=0, column=2, padx=20)
 
-    buttons['plot'] = tk.Button(buttons_frame, text="Plot", width=20, command=plot_button, state=tk.DISABLED)
+    buttons['plot'] = ttk.Button(buttons_frame, text="Plot", width=20, command=plot_button, state=tk.DISABLED)
     buttons['plot'].grid(row=0, column=3, padx=20)
-
-
 
 
 def initialize_Visualization_frame(data):
@@ -134,13 +150,23 @@ def initialize_Visualization_frame(data):
     tk.Button(visualization_frame, text="return", command=lambda: switch_frames(main_frame, visualization_frame)).pack()
 
 
+def switch_model(selection):
+    global selected_model
+    selected_model = selection
+
+    # TODO: Update options according to model
+    if selected_model in ["Adaline", "MLP"]:
+        tk.messagebox.showinfo("Model Not Available", "This model hasn't been added yet")
+
+
 ####################
-# Buttons
+##### Buttons
 ####################
 def train_button():
     # verify data
     choosen_features = check_lists['features'].getCheckedItems()
     choosen_classes = check_lists['classes'].getCheckedItems()
+
     #choosen_features = ['bill_length_mm', "bill_depth_mm"]
     #choosen_classes = ["Adelie", "Gentoo"]
 

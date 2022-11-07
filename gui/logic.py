@@ -13,6 +13,7 @@ viz_data: pd.DataFrame
 
 
 def fit_model(features: list, classes: list, hyper_parameters: dict):
+    # TODO : add multiple model support
     global __model__
 
     load_data(features, classes)
