@@ -1,10 +1,65 @@
 import numpy as np
 import pandas as pd
+import models.Activations
+import models.Losses
 from models.Activations import *
 from Utils import accuracy_score
+from abc import ABC, abstractmethod
 
 RANDOM_SEED = 42
+RANDOM_GENERATOR = np.random.RandomState(RANDOM_SEED)
 
+
+class Model(ABC):
+    def __init__(self, lr, bias=True):
+        self._lr = lr
+        self._bias = bias
+        self._activation = None
+        self._weights = None
+
+    @abstractmethod
+    def fit(self, x: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray, epochs=100, verbose=True):
+        pass
+
+    @abstractmethod
+    def predict(self, x: pd.DataFrame | np.ndarray):
+        pass
+
+    def __init_weights(self, x: pd.DataFrame):
+        """
+        Initializes random weights with shape (1, features)
+        """
+        features_count = x.shape[1]
+        if self._bias:
+            features_count += 1
+        self.__weights = RANDOM_GENERATOR.rand(1, features_count)
+
+    @abstractmethod
+    def __calculate_cost(self):
+        pass
+
+    @abstractmethod
+    def __calculate_updates(self):
+        pass
+
+
+class Adaline(Model):
+    # TODO : implement adaline model
+    def __init__(self, lr, bias=True):
+        super().__init__(lr, bias)
+        self._activation = Activations.linear
+
+    def fit(self, x: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray, epochs=100, verbose=True):
+        pass
+
+    def predict(self, x: pd.DataFrame | np.ndarray):
+        pass
+
+    def __calculate_cost(self):
+        pass
+
+    def __calculate_updates(self):
+        pass
 
 
 class Perceptron:
@@ -21,7 +76,6 @@ class Perceptron:
         self.__epochs = epochs
         self.__weights = None
         self.__bias = bias
-        self.__random_generator__ = np.random.RandomState(RANDOM_SEED)
 
     def fit(self, X: pd.DataFrame, Y: pd.DataFrame, verbose=True):
         # TODO : change epochs to be included in here instead of init
@@ -34,7 +88,7 @@ class Perceptron:
         features_count = X.shape[1]
         samples_count = X.shape[0]
 
-        self.__weights = self.__random_generator__.rand(1, features_count)
+        self.__weights = RANDOM_GENERATOR.rand(1, features_count)
 
         for epoch in range(self.__epochs):
             for i in range(samples_count):
@@ -59,9 +113,6 @@ class Perceptron:
 
         vectorized_activation = np.vectorize(self.__activation)
         return np.squeeze(vectorized_activation(np.dot(self.__weights, X.T)))
-
-    def update_hyper_parameters(self):
-        pass
 
     def get_weights(self):
         return self.__weights

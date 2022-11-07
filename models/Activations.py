@@ -1,3 +1,5 @@
+def linear(x):
+    return x
 
 def sig_num(a):
     """
