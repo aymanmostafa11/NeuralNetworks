@@ -48,4 +48,4 @@ def switch_frames(to_focus: tk.Frame, to_forget: tk.Frame, destroy=True):
     if destroy:
         to_forget.destroy()
 
-    to_focus.pack(fill="both", expand=1)
+    to_focus.pack(fill="y", expand=1)
