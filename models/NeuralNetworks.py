@@ -44,16 +44,27 @@ class Model(ABC):
 
 
 class Adaline(Model):
-    # TODO : implement adaline model
+
     def __init__(self, lr, bias=True):
         super().__init__(lr, bias)
-        self._activation = Activations.linear
+        self._activation = Model.Activations.linear
 
     def fit(self, x: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray, epochs=100, verbose=True):
-        pass
+        # solve using normal equation
+        X = x.copy(deep=True)
+        Y = y.copy(deep=True)
+
+        if self.__bias is True:
+            X.insert(0, "bias", np.ones(X.shape[0]))
+
+        self._weights = np.dot(np.linalg.inv(X.T@X), X.T@Y)
 
     def predict(self, x: pd.DataFrame | np.ndarray):
-        pass
+
+        X = x.copy(deep=True)  # to prevent adding bias from editing original data
+        if self.__bias is True and "bias" not in X.columns:
+            X.insert(0, "bias", np.ones(X.shape[0]))
+        return np.where(X.T@self._weights>0, 1, 0)
 
     def __calculate_cost(self):
         pass
