@@ -64,7 +64,7 @@ class WidgetManager:
 
         tk.Label(parent_frame, text="Choose a model: ").grid(row=0, column=0)
         self.model_listbox = ttk.OptionMenu(parent_frame, tk.StringVar(parent_frame), self.AVAILABLE_MODELS[0],
-                                            *self.AVAILABLE_MODELS, command=switch_model)
+                                            *self.AVAILABLE_MODELS)
         self.model_listbox.grid(row=0, column=1)
 
     def __init_features_frame(self):
@@ -117,17 +117,15 @@ class WidgetManager:
 
     def __init_buttons_frame(self):
         parent_frame = self.frames["BUTTONS"]
-        self.buttons['train'] = ttk.Button(parent_frame, text="Train", width=20, command=train_button)
+        self.buttons['train'] = ttk.Button(parent_frame, text="Train", width=20, command=self.train_button)
         self.buttons['train'].grid(row=0, column=0, padx=20)
 
-        self.buttons['test'] = ttk.Button(parent_frame, text="Test", width=20, command=test_button, state=tk.DISABLED)
+        self.buttons['test'] = ttk.Button(parent_frame, text="Test", width=20, command=self.test_button,
+                                          state=tk.DISABLED)
         self.buttons['test'].grid(row=0, column=1, padx=20)
 
-        self.buttons['retrain'] = ttk.Button(parent_frame, text="reTrain", width=20, command=retrain_button,
-                                             state=tk.DISABLED)
-        self.buttons['retrain'].grid(row=0, column=2, padx=20)
-
-        self.buttons['plot'] = ttk.Button(parent_frame, text="Plot", width=20, command=plot_button, state=tk.DISABLED)
+        self.buttons['plot'] = ttk.Button(parent_frame, text="Plot", width=20, command=self.plot_button,
+                                          state=tk.DISABLED)
         self.buttons['plot'].grid(row=0, column=3, padx=20)
 
     def init_viz_frame(self):
@@ -175,59 +173,45 @@ class WidgetManager:
                 'epochs': int(self.hyper_parameters_widgets['epochs'].get()),
                 'bias': self.hyper_parameters_widgets['bias'].get()}
 
+    ###########
+    ### Buttons
+    ###########
+    def train_button(self):
+        selected_classes = self.get_selected_classes()
+        selected_features = self.get_selected_features()
+
+        if not valid_input(selected_features, selected_classes, self.hyper_parameters_widgets):
+            return
+
+        # fit model
+        fit_model(selected_features, selected_classes, self.get_hyperparameters())
+        tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy "
+                                                             f"{test_model(train_only=True)}")
+        # enable other buttons
+        self.buttons['test'].config(state=tk.NORMAL)
+        self.buttons['plot'].config(state=tk.NORMAL)
+
+    def test_button(self):
+        train_acc, test_acc, conf_mat = test_model(widget_manager.get_selected_classes())
+        tk.messagebox.showinfo("Model Tested",
+                               f"Model Accuracy on train data {train_acc}\n"
+                               f"Model Accuracy on test data {test_acc}\n\n"
+                               f"Check Console for confusion matrix!")
+
+    def plot_button(self):
+        self.init_viz_frame()
+        switch_frames(widget_manager.viz_frame, widget_manager.main_frame, destroy=False)
+
+    def switch_model(self, selection):
+        self.selected_model = selection
+
+        # TODO: Update options according to model
+        if selection in ["Adaline", "MLP"]:
+            tk.messagebox.showinfo("Model Not Available", "This model hasn't been added yet")
+
 
 widget_manager = WidgetManager()
 
 
 def run_gui():
     widget_manager.main_window.mainloop()
-
-
-####################
-##### Buttons
-####################
-def train_button():
-    # verify data
-    choosen_features = widget_manager.get_selected_features()
-    choosen_classes = widget_manager.get_selected_classes()
-
-    #choosen_features = ['bill_length_mm', "bill_depth_mm"]
-    #choosen_classes = ["Adelie", "Gentoo"]
-
-    if not valid_input(choosen_features, choosen_classes, widget_manager.hyper_parameters_widgets):
-        return
-
-    # fit model
-    fit_model(choosen_features, choosen_classes, widget_manager.get_hyperparameters())
-    tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy "
-                                                         f"{test_model(train_only=True)}")
-    # enable other buttons
-    widget_manager.buttons['test'].config(state=tk.NORMAL)
-    widget_manager.buttons['retrain'].config(state=tk.NORMAL)
-    widget_manager.buttons['plot'].config(state=tk.NORMAL)
-
-
-def test_button():
-    train_acc, test_acc, conf_mat = test_model(widget_manager.get_selected_classes())
-    tk.messagebox.showinfo("Model Tested",
-                           f"Model Accuracy on train data {train_acc}\n"
-                           f"Model Accuracy on test data {test_acc}\n\n"
-                           f"Check Console for confusion matrix!")
-
-
-def retrain_button():
-    # retrain_model()
-    tk.messagebox.showinfo("Retrain Model", "Coming Soon :D")
-
-
-def plot_button():
-    widget_manager.init_viz_frame()
-    switch_frames(widget_manager.viz_frame, widget_manager.main_frame, destroy=False)
-
-
-def switch_model(selection):
-    widget_manager.selected_model = selection
-
-    # TODO: Update options according to model
-    if selection in ["Adaline", "MLP"]:
-        tk.messagebox.showinfo("Model Not Available", "This model hasn't been added yet")
