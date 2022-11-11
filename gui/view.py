@@ -165,8 +165,6 @@ class WidgetManager:
         return self.check_lists["features"].getCheckedItems()
 
     def get_hyperparameters(self):
-        if not self.__verify_parameters():
-            return
 
         params = {'lr': float(self.hyper_parameters_widgets['lr'].get()),
                   'epochs': int(self.hyper_parameters_widgets['epochs'].get()),
@@ -208,7 +206,7 @@ class WidgetManager:
         selected_classes = self.get_selected_classes()
         selected_features = self.get_selected_features()
 
-        if not valid_input(selected_features, selected_classes):
+        if not valid_input(selected_features, selected_classes) or not self.__verify_parameters():
             return
 
         # fit model
