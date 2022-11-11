@@ -64,7 +64,7 @@ class WidgetManager:
 
         tk.Label(parent_frame, text="Choose a model: ").grid(row=0, column=0)
         self.model_listbox = ttk.OptionMenu(parent_frame, tk.StringVar(parent_frame), self.AVAILABLE_MODELS[0],
-                                            *self.AVAILABLE_MODELS)
+                                            *self.AVAILABLE_MODELS, command=self.switch_model)
         self.model_listbox.grid(row=0, column=1)
 
     def __init_features_frame(self):
