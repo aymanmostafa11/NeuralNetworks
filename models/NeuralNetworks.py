@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import models.Activations
+from models import Activations
 import models.Losses
 from models.Activations import *
 from Utils import accuracy_score
@@ -35,26 +35,28 @@ class Model(ABC):
         self.__weights = RANDOM_GENERATOR.rand(1, features_count)
 
     @abstractmethod
-    def __calculate_cost(self):
+    def _calculate_cost(self):
         pass
 
     @abstractmethod
-    def __calculate_updates(self):
+    def _calculate_updates(self):
         pass
 
+    def get_weights(self):
+        return self._weights
 
 class Adaline(Model):
 
     def __init__(self, lr, bias=True):
         super().__init__(lr, bias)
-        self._activation = Model.Activations.linear
+        self._activation = Activations.linear
 
     def fit(self, x: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray, epochs=100, verbose=True):
         # solve using normal equation
         X = x.copy(deep=True)
         Y = y.copy(deep=True)
 
-        if self.__bias is True:
+        if self._bias is True:
             X.insert(0, "bias", np.ones(X.shape[0]))
 
         self._weights = np.dot(np.linalg.inv(X.T@X), X.T@Y)
@@ -62,15 +64,16 @@ class Adaline(Model):
     def predict(self, x: pd.DataFrame | np.ndarray):
 
         X = x.copy(deep=True)  # to prevent adding bias from editing original data
-        if self.__bias is True and "bias" not in X.columns:
+        if self._bias is True and "bias" not in X.columns:
             X.insert(0, "bias", np.ones(X.shape[0]))
-        return np.where(X.T@self._weights>0, 1, 0)
+        return np.where(X@self._weights > 0, 1, -1)
 
-    def __calculate_cost(self):
-        pass
+    def _calculate_cost(self):
+        print("Not Implemented")
 
-    def __calculate_updates(self):
-        pass
+    def _calculate_updates(self):
+        print("Not Implemented")
+
 
 
 class Perceptron:

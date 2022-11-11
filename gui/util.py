@@ -1,19 +1,11 @@
 import tkinter as tk
 
 
-def valid_input(features, classes, hyper_parameters):
+def valid_input(features, classes):
     if len(features) != 2 or len(classes) != 2:
         tk.messagebox.showerror(title="Invalid Parameters",
                                 message="Error in number of features or classes selected\n"
                                         "Please select exactly 2 features and 2 classes")
-        return 0
-
-    try:
-        float(hyper_parameters['lr'].get())
-        int(hyper_parameters['epochs'].get())
-    except:
-        tk.messagebox.showerror(title="Invalid Parameters",
-                                message="Learning rate should be between 0 and 1,\nEpochs should be an integer > 0")
         return 0
     return 1
 

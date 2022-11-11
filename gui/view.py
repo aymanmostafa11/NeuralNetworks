@@ -11,7 +11,6 @@ from gui.logic import *
 from gui.util import valid_input, ChecklistBox, switch_frames
 
 
-# TODO : fix buttons command inside class can't see functions outside
 class WidgetManager:
     __WINDOW_SIZE = "800x600"
     __WINDOW_TITLE = "NN Task"
@@ -105,11 +104,9 @@ class WidgetManager:
         self.hyper_parameters_widgets['bias'] = tk.BooleanVar(value=False)
         tk.Checkbutton(parent_frame, variable=self.hyper_parameters_widgets['bias'], text="Bias",
                        onvalue=True, offvalue=False,
-                       anchor="w", width=10,
                        relief="flat", highlightthickness=0).grid(row=0, column=4, padx=10)
 
         # Min Threshold (Adaline)
-        # TODO: add logic to hide and show depending on selected model
         default_val = "10"
         self.hyper_parameters_widgets["min_threshold_label"] = tk.Label(parent_frame, text="Min Threshold: ")
         self.hyper_parameters_widgets['min_threshold'] = tk.Entry(parent_frame, width=text_box_width, font=text_font,
@@ -168,10 +165,41 @@ class WidgetManager:
         return self.check_lists["features"].getCheckedItems()
 
     def get_hyperparameters(self):
-        # TODO : perform value checks
-        return {'lr': float(self.hyper_parameters_widgets['lr'].get()),
-                'epochs': int(self.hyper_parameters_widgets['epochs'].get()),
-                'bias': self.hyper_parameters_widgets['bias'].get()}
+        if not self.__verify_parameters():
+            return
+
+        params = {'lr': float(self.hyper_parameters_widgets['lr'].get()),
+                  'epochs': int(self.hyper_parameters_widgets['epochs'].get()),
+                  'bias': self.hyper_parameters_widgets['bias'].get()}
+        if self.selected_model == "Adaline":
+            params["min_threshold"] = float(self.hyper_parameters_widgets["min_threshold"].get())
+
+        return params
+
+    def __verify_parameters(self):
+        model = self.selected_model
+        try:
+            lr = float(self.hyper_parameters_widgets["lr"].get())
+            epochs = int(self.hyper_parameters_widgets["epochs"].get())
+            assert lr > 0 and epochs > 0
+
+            if model == "Adaline":
+                min_thresh = float(self.hyper_parameters_widgets["min_threshold"].get())
+                assert min_thresh > 0
+
+            return True
+        except ValueError or AssertionError:
+            error_msg = "Learning rate should be between 0 and 1,\nEpochs should be an integer > 0"
+            if model == "Adaline":
+                error_msg += "\nMin Threshold should be a float > 0"
+
+            tk.messagebox.showerror("Invalid Parameters", error_msg)
+            return False
+
+    def __reset_parameters_widgets(self):
+        if "min_threshold" in self.hyper_parameters_widgets.keys():
+            self.hyper_parameters_widgets["min_threshold_label"].grid_forget()
+            self.hyper_parameters_widgets["min_threshold"].grid_forget()
 
     ###########
     ### Buttons
@@ -180,11 +208,11 @@ class WidgetManager:
         selected_classes = self.get_selected_classes()
         selected_features = self.get_selected_features()
 
-        if not valid_input(selected_features, selected_classes, self.hyper_parameters_widgets):
+        if not valid_input(selected_features, selected_classes):
             return
 
         # fit model
-        fit_model(selected_features, selected_classes, self.get_hyperparameters())
+        fit_model(self.selected_model, selected_features, selected_classes, self.get_hyperparameters())
         tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy "
                                                              f"{test_model(train_only=True)}")
         # enable other buttons
@@ -192,7 +220,7 @@ class WidgetManager:
         self.buttons['plot'].config(state=tk.NORMAL)
 
     def test_button(self):
-        train_acc, test_acc, conf_mat = test_model(widget_manager.get_selected_classes())
+        train_acc, test_acc, conf_mat = test_model(self.get_selected_classes())
         tk.messagebox.showinfo("Model Tested",
                                f"Model Accuracy on train data {train_acc}\n"
                                f"Model Accuracy on test data {test_acc}\n\n"
@@ -205,8 +233,19 @@ class WidgetManager:
     def switch_model(self, selection):
         self.selected_model = selection
 
-        # TODO: Update options according to model
-        if selection in ["Adaline", "MLP"]:
+        if selection == "Perceptron":
+            self.__reset_parameters_widgets()
+
+        elif selection == "Adaline":
+            self.__reset_parameters_widgets()
+            # TODO: add logic for only epochs or min_threshold can be provided not both
+            column_count = self.frames["PARAMETERS"].grid_size()[0]
+            column_count += 1
+            self.hyper_parameters_widgets["min_threshold_label"].grid(row=0, column=column_count)
+            column_count += 1
+            self.hyper_parameters_widgets["min_threshold"].grid(row=0, column=column_count, padx=5)
+
+        elif selection == "MLP":
             tk.messagebox.showinfo("Model Not Available", "This model hasn't been added yet")
 
 

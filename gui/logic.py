@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from DataManager import prep_data, get_viz_data
-from models.NeuralNetworks import Perceptron
+from models.NeuralNetworks import Perceptron, Adaline
 from Utils import accuracy_score, confusion_matrix
 
 __model__: Perceptron
@@ -12,18 +12,18 @@ y_test: pd.DataFrame
 viz_data: pd.DataFrame
 
 
-def fit_model(features: list, classes: list, hyper_parameters: dict):
-    # TODO : add multiple model support
+def fit_model(model_name, features: list, classes: list, hyper_parameters: dict):
     global __model__
 
     load_data(features, classes)
 
-    __model__ = Perceptron(hyper_parameters['lr'], hyper_parameters['epochs'], hyper_parameters['bias'])
-    __model__.fit(x_train, y_train)
+    if model_name == "Perceptron":
+        __model__ = Perceptron(hyper_parameters['lr'], hyper_parameters['epochs'], hyper_parameters['bias'])
+        __model__.fit(x_train, y_train)
 
-
-def retrain_model():
-    __model__.fit(x_train, y_train)
+    elif model_name == "Adaline":
+        __model__ = Adaline(hyper_parameters["lr"], hyper_parameters["bias"])
+        __model__.fit(x_train, y_train, hyper_parameters["epochs"])
 
 
 def test_model(classes=None, train_only=False):
