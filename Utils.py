@@ -41,10 +41,10 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, label_names_dict = 
         positive_label_name = label_names_dict["pos"]
         negative_label_name = label_names_dict["neg"]
 
-    tp = sum( (y_true == positive_label) & (y_true == y_pred) )
-    tn = sum( (y_true == negative_label) & (y_true == y_pred) )
-    fn = sum( (y_true == positive_label) & (y_true != y_pred) )
-    fp = sum( (y_true == negative_label) & (y_true != y_pred) )
+    tp = np.sum( (y_true == positive_label) & (y_true == y_pred) )
+    tn = np.sum( (y_true == negative_label) & (y_true == y_pred) )
+    fn = np.sum( (y_true == positive_label) & (y_true != y_pred) )
+    fp = np.sum( (y_true == negative_label) & (y_true != y_pred) )
 
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
@@ -73,7 +73,7 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, label_names_dict = 
 
 
 def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray, verbose=False):
-    acc = round( sum(y_true == y_pred) / len(y_true) * 100, 2)
+    acc = np.round( np.sum(y_true == y_pred) / len(y_true) * 100, 2)
     if verbose:
         print(acc)
 

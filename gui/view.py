@@ -107,7 +107,7 @@ class WidgetManager:
                        relief="flat", highlightthickness=0).grid(row=0, column=4, padx=10)
 
         # Min Threshold (Adaline)
-        default_val = "10"
+        default_val = "1.0"
         self.hyper_parameters_widgets["min_threshold_label"] = tk.Label(parent_frame, text="Min Threshold: ")
         self.hyper_parameters_widgets['min_threshold'] = tk.Entry(parent_frame, width=text_box_width, font=text_font,
                                                                   textvariable=tk.StringVar(parent_frame, default_val))
@@ -183,7 +183,7 @@ class WidgetManager:
 
             if model == "Adaline":
                 min_thresh = float(self.hyper_parameters_widgets["min_threshold"].get())
-                assert min_thresh > 0
+                assert min_thresh >= 0
 
             return True
         except ValueError or AssertionError:
