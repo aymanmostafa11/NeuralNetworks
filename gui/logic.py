@@ -23,7 +23,7 @@ def fit_model(model_name, features: list, classes: list, hyper_parameters: dict)
 
     elif model_name == "Adaline":
         __model__ = Adaline(hyper_parameters["lr"], hyper_parameters["bias"])
-        __model__.fit(x_train, y_train, hyper_parameters["epochs"])
+        __model__.fit(x_train, y_train, hyper_parameters["epochs"], hyper_parameters['min_threshold'], normal_eq=False)
 
 
 def test_model(classes=None, train_only=False):
