@@ -1,3 +1,5 @@
+import numpy as np
+
 def linear(x):
     return x
 
@@ -11,5 +13,13 @@ def sig_num(a):
     if a == 0:
         return -1
     return int(a / abs(a))
+
+
+def sigmoid(a):
+    return 1 / (1 + np.exp(-a))
+
+
+def tanh(a):
+    return np.tanh(a)
 
 

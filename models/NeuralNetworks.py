@@ -45,6 +45,7 @@ class Model(ABC):
     def get_weights(self):
         return self._weights
 
+
 class Adaline(Model):
 
     def __init__(self, lr, bias=True):
@@ -59,21 +60,20 @@ class Adaline(Model):
         if self._bias is True:
             X.insert(0, "bias", np.ones(X.shape[0]))
 
-        self._weights = np.dot(np.linalg.inv(X.T@X), X.T@Y)
+        self._weights = np.dot(np.linalg.inv(X.T @ X), X.T @ Y)
 
     def predict(self, x: pd.DataFrame | np.ndarray):
 
         X = x.copy(deep=True)  # to prevent adding bias from editing original data
         if self._bias is True and "bias" not in X.columns:
             X.insert(0, "bias", np.ones(X.shape[0]))
-        return np.where(X@self._weights > 0, 1, -1)
+        return np.where(X @ self._weights > 0, 1, -1)
 
     def _calculate_cost(self):
         print("Not Implemented")
 
     def _calculate_updates(self):
         print("Not Implemented")
-
 
 
 class Perceptron:
@@ -130,3 +130,86 @@ class Perceptron:
 
     def get_weights(self):
         return self.__weights
+
+
+class MLP(Model):
+    """
+        :param lr: learning rate
+        :param layers: a list of dicts holding layer info, key = layer number, input is layers[0]
+        :param bias: bias
+    """
+
+    def __init__(self, lr, layers: dict, bias=True):
+        super().__init__(lr, bias)
+        self._layers = layers
+        """
+            layers
+            [
+                INPUT LAYER
+                { units: inputs_size, activation: linear },
+                HIDDEN LAYERS
+                { units: n_units, activation: RELU },
+                { units: n_units, activation: RELU },
+                OUTPUT LAYER
+                { units: 1, activation: sigmoid },
+            ]
+            IMPORTANT: make sure to give the input layer a linear activation
+        """
+
+    def __init_weights(self, x: pd.DataFrame):
+        features_count = x.shape[1]
+
+        """
+            a list of matrices where each matrix represents the weights of a particular layer,
+            each matrix column represents the weights of a unit.
+        """
+        self._weights = []
+
+        # Input layer "weight"
+        self._weights.append(np.identity(features_count))
+
+        # Set random weights for each layer in the network
+        for i in range(1, len(self._layers)):
+            self._weights.append(np.random.rand(self._layers[i - 1]['units'], self._layers[i]['units']))
+
+        if self._bias:
+            """
+                a list of lists where each list represents the biases of a particular layer,
+                each list element represents the bias of a unit.
+            """
+            self._biases = []
+            # Input layer "biases"
+            self._biases.append(np.zeros(self._layers[0]['units']))
+
+            # Set random biases for each layer in the network
+            for i in range(1, len(self._layers)):
+                self._biases.append(np.random.rand(self._layers[i]['units']))
+
+    # Sa3ood back propagation
+    def fit(self, x: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray, epochs=100, verbose=True):
+        pass
+
+    # Forward Propagation
+    def predict(self, x: pd.DataFrame | np.ndarray):
+        return self._forward(x)
+
+    def _march(self, a_in: np.ndarray, W: np.ndarray, b: np.ndarray, g):
+        """
+            Applies a single forward propagation step.
+            :param a_in:  input vector.
+            :param W: layer weights matrix.
+            :param b: layer biases list.
+            :param g: layer activation function.
+        """
+        z = a_in @ W + b
+        a_out = g(z)
+        return a_out
+
+    def _forward(self, x: np.ndarray):
+        """
+        :param x: sample input
+        :return: prediction
+        """
+        for i in range(len(self._layers)):
+            x = self._march(x, self._weights[i], self._biases[i], self._layers[i]['activation'])
+        return x
