@@ -15,11 +15,42 @@ def sig_num(a):
     return int(a / abs(a))
 
 
-def sigmoid(a):
-    return 1 / (1 + np.exp(-a))
+def sigmoid(Z):
+    return 1 / (1 + np.exp(-Z))
 
+def sigmoid_backward(dA, Z):
+    """
+     Arguments:
+     dA : previous-activation gradient
+     Z : for computing backward propagation
 
-def tanh(a):
-    return np.tanh(a)
+     Returns:
+     dZ -- Gradient of the cost with respect to Z
+     """
+    
+    a = sigmoid(Z)
+    dZ = dA * a * (1-a)
 
+    assert (dZ.shape == Z.shape)
+
+    return dZ
+
+def tanh(Z):
+    return np.tanh(Z)
+
+def tanh_backward(dA, Z):
+    """
+    Arguments:
+    dA : previous-activation gradient
+    Z : for computing backward propagation
+
+    Returns:
+    dZ -- Gradient of the cost with respect to Z
+    """
+    a = tanh(Z)
+    dZ = dA * (1- np.power(a,2))
+
+    assert (dZ.shape == Z.shape)
+
+    return dZ
 
