@@ -1,9 +1,11 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+from sklearn.decomposition import PCA
 
 encoder = LabelEncoder()
 filepath = "data/penguins.csv"
-
+mnist_train_path = "data/mnist_train.csv"
+mnist_test_path = "data/mnist_test.csv"
 
 def prep_data(classes, features):
     """
@@ -98,4 +100,45 @@ def get_viz_data(classes, features):
     data = preprocessing(data, data.columns.drop("species"))
     data = data[(data['species'] == classes[0]) | (data['species'] == classes[1])]
     return data
+
+
+def prep_mnist(reduceDimensions = True , degree = 80):
+    mnist_train, mnist_test = read_mnist()
+    mnist_train.fillna(0,inplace = True)
+    mnist_test.fillna(0,inplace = True)
+    remove_constant_pixels(mnist_train)
+    remove_constant_pixels(mnist_test)
+    X_train , Y_train = split_mnist(mnist_train)
+    X_test , Y_test = split_mnist(mnist_test)
+    X_train = X_train / 255.0
+    X_test = X_test / 255.0
+
+    if reduceDimensions == True:
+        X_train = reduce_dimensions_of_mnist(X_train, degree = degree)
+        X_test = reduce_dimensions_of_mnist(X_test, degree = degree)
+    
+    return X_train, X_test, Y_train, Y_test
+
+
+def read_mnist():
+    mnist_train = pd.read_csv(mnist_train_path)
+    mnist_test = pd.read_csv(mnist_test_path)
+    return mnist_train, mnist_test
+
+
+def remove_constant_pixels(data):
+    for col in data:
+        if data[col].max() == 0 or data[col].min() == 255:
+            data.drop(columns=[col], inplace=True)    
+
+def split_mnist(data):
+    X = data.drop(columns = 'label')
+    Y = data['label']
+    return X,Y
+
+
+def reduce_dimensions_of_mnist(X,degree = 80):
+    pca = PCA(n_components=degree)
+    X_reduced = pca.fit_transform(X)
+    return X_reduced
 
