@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from models import Activations
-import models.Losses
+from models.Losses import mean_squared_error
 from models.Activations import *
 from Utils import accuracy_score
 from abc import ABC, abstractmethod
@@ -173,6 +173,7 @@ class MLP(Model):
         for i in range(1, len(self._layers)):
             self._weights.append(np.random.rand(self._layers[i]['units'], self._layers[i - 1]['units']))
 
+        if self._bias:
             """
                 a list of lists where each list represents the biases of a particular layer,
                 each list element represents the bias of a unit.
@@ -194,18 +195,38 @@ class MLP(Model):
             y: expected output -- should be (nL,1)
             epochs: number of iterations
         """
+        # convert to numpy
+        if type(x) == pd.DataFrame:
+            x = x.values
+        if type(y) == pd.DataFrame:
+            y = y.values
+
+        x = x.T
+        y = y.T
 
         self.__init_weights(x)
 
         for i in range(0, epochs):
             AL, caches = self._forward(x)
+
+            if verbose:
+                if i % 10 == 0:
+                    print(f"Epoch : {i} , Cost: {mean_squared_error(AL, y)}")
+
             gradients = self._backward(AL, y, caches)
             self.update_weights(gradients, self._lr)
 
+        if verbose:
+            print(f"Final Cost: {mean_squared_error(AL, y)}")
     # Forward Propagation
 
     def predict(self, x: pd.DataFrame | np.ndarray):
-        return self._forward(x)
+        # convert to numpy
+        if type(x) == pd.DataFrame:
+            x = x.values
+        x = x.T
+
+        return self._forward(x)[0]
 
     def _march(self, a_in: np.ndarray, W: np.ndarray, b: np.ndarray, g):
         """
@@ -215,7 +236,9 @@ class MLP(Model):
             :param b: layer biases list.
             :param g: layer activation function.
         """
-        z = np.dot(W, a_in) + b
+        z = np.dot(W, a_in)
+        if b is not None:
+            z += b
         a_out = g(z)
         return a_out, z
 
@@ -224,11 +247,14 @@ class MLP(Model):
         :param x: sample input
         :return: prediction
         """
+
         cache = {}
         for l in range(len(self._layers)):
-            x, z = self._march(x, self._weights[l], self._biases[l], self._layers[l]['activation'])
+            bias = None if not self._bias else self._biases[l]
+            x, z = self._march(x, self._weights[l], bias, self._layers[l]['activation'])
             cache["A" + str(l)] = x
             cache["Z" + str(l)] = z
+
 
         return x, cache
 
@@ -306,14 +332,14 @@ class MLP(Model):
     def _calculate_updates(self):
         pass
 
-
-dic = {0: {"units": 3, "activation": Activations.linear}, 1: {"units": 5, "activation": Activations.tanh},
-       2: {"units": 4, "activation": Activations.tanh}, 3: {"units": 4, "activation": Activations.tanh},
-       4: {"units": 4, "activation": Activations.tanh}, 5: {"units": 3, "activation": Activations.tanh}}
-x = [[12, 54, 65], [121, 56, 46], [561, 25, 6], [11, 5, 36], [11, 15, 61], [21, 52, 26], [1, 5, 6]]
-y = [[1, 0, 0], [1, 0, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1], [1, 0, 0]]
-li1 = np.array(x).T
-li2 = np.array(y).T
-
-mod = MLP(.01, dic)
-mod.fit(li1, li2)
+#
+# dic = {0: {"units": 3, "activation": Activations.linear}, 1: {"units": 5, "activation": Activations.tanh},
+#        2: {"units": 4, "activation": Activations.tanh}, 3: {"units": 4, "activation": Activations.tanh},
+#        4: {"units": 4, "activation": Activations.tanh}, 5: {"units": 3, "activation": Activations.tanh}}
+# x = [[12, 54, 65], [121, 56, 46], [561, 25, 6], [11, 5, 36], [11, 15, 61], [21, 52, 26], [1, 5, 6]]
+# y = [[1, 0, 0], [1, 0, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1], [1, 0, 0]]
+# li1 = np.array(x).T
+# li2 = np.array(y).T
+#
+# mod = MLP(.01, dic)
+# mod.fit(li1, li2)

@@ -18,13 +18,14 @@ class WidgetManager:
     FEATURES = ('bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'gender', 'body_mass_g')
     CLASSES = ('Adelie', 'Gentoo', 'Chinstrap')
     AVAILABLE_MODELS = ["Perceptron", "Adaline", "MLP"]
+    AVAILABLE_ACTIVATIONS = ["Sigmoid", "Tanh"]
 
     def __init__(self):
         self.main_window = tk.Tk()
         self.main_frame = tk.Frame(self.main_window)
         self.main_frame.pack(fill="y", expand=1)
 
-        self.frames = {}
+        self.frames: dict[str: tk.Frame, ...] = {}
         self.viz_frame = None
 
         self.check_lists = {}
@@ -36,6 +37,7 @@ class WidgetManager:
 
         self.__init_window()
         self.__init_frames()
+
 
     def __init_window(self):
         self.main_window.geometry(self.__WINDOW_SIZE)
@@ -50,6 +52,9 @@ class WidgetManager:
             self.frames[name] = tk.Frame(self.main_frame, highlightbackground="black", highlightthickness=1,
                                          name=str.lower(name))
             self.frames[name].grid(row=row_index, column=0)
+
+        self.frames["ARCHI"] = tk.Frame(self.main_frame, highlightbackground="black", highlightthickness=1,
+                                        name=str.lower("archi"))
 
         # init
         self.__init_model_frame()
@@ -101,7 +106,7 @@ class WidgetManager:
         self.hyper_parameters_widgets['epochs'].grid(row=0, column=3, padx=10)
 
         # bias
-        self.hyper_parameters_widgets['bias'] = tk.BooleanVar(value=False)
+        self.hyper_parameters_widgets['bias'] = tk.BooleanVar(value=True)
         tk.Checkbutton(parent_frame, variable=self.hyper_parameters_widgets['bias'], text="Bias",
                        onvalue=True, offvalue=False,
                        relief="flat", highlightthickness=0).grid(row=0, column=4, padx=10)
@@ -171,11 +176,25 @@ class WidgetManager:
                   'bias': self.hyper_parameters_widgets['bias'].get()}
         if self.selected_model == "Adaline":
             params["min_threshold"] = float(self.hyper_parameters_widgets["min_threshold"].get())
+        elif self.selected_model == "MLP":
+            archi_text = self.hyper_parameters_widgets["archi"].get().split(",")
+            params["archi"] = [int(layer_neurons) for layer_neurons in archi_text]
+            params["activation"] = self.hyper_parameters_widgets["activation_val"].get()
 
         return params
 
     def __verify_parameters(self):
         model = self.selected_model
+
+        if model == "Adaline" or model == "Perceptron":
+            classes = self.get_selected_classes()
+            features = self.get_selected_features()
+            if len(features) != 2 or len(classes) != 2:
+                tk.messagebox.showerror(title="Invalid Parameters",
+                                        message="Error in number of features or classes selected\n"
+                                                "Please select exactly 2 features and 2 classes")
+                return False
+
         try:
             lr = float(self.hyper_parameters_widgets["lr"].get())
             epochs = int(self.hyper_parameters_widgets["epochs"].get())
@@ -184,6 +203,10 @@ class WidgetManager:
             if model == "Adaline":
                 min_thresh = float(self.hyper_parameters_widgets["min_threshold"].get())
                 assert min_thresh >= 0
+
+            elif model == "MLP":
+                archi_text = self.hyper_parameters_widgets["archi"].get().split(",")
+                [int(i) for i in archi_text]
 
             return True
         except ValueError or AssertionError:
@@ -199,30 +222,54 @@ class WidgetManager:
             self.hyper_parameters_widgets["min_threshold_label"].grid_forget()
             self.hyper_parameters_widgets["min_threshold"].grid_forget()
 
+        if "activation" in self.hyper_parameters_widgets.keys():
+            self.hyper_parameters_widgets["activation_label"].grid_forget()
+            self.hyper_parameters_widgets["activation"].grid_forget()
+
     ###########
     ### Buttons
     ###########
     def train_button(self):
-        selected_classes = self.get_selected_classes()
-        selected_features = self.get_selected_features()
-
-        if not valid_input(selected_features, selected_classes) or not self.__verify_parameters():
+        if not self.__verify_parameters():
             return
 
+        features = self.FEATURES
+        classes = self.CLASSES
+        if self.selected_model == "Adaline" or self.selected_model == "Perceptron":
+            features = self.get_selected_features()
+            classes = self.get_selected_classes()
+
+
         # fit model
-        fit_model(self.selected_model, selected_features, selected_classes, self.get_hyperparameters())
-        tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy "
-                                                             f"{test_model(train_only=True)}")
+        fit_model(self.selected_model, self.get_hyperparameters(), features, classes)
+
+        if self.selected_model != "MLP":
+            tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy "
+                                                                 f"{test_model(train_only=True)}")
+
         # enable other buttons
         self.buttons['test'].config(state=tk.NORMAL)
         self.buttons['plot'].config(state=tk.NORMAL)
 
     def test_button(self):
-        train_acc, test_acc, conf_mat = test_model(self.get_selected_classes())
-        tk.messagebox.showinfo("Model Tested",
-                               f"Model Accuracy on train data {train_acc}\n"
-                               f"Model Accuracy on test data {test_acc}\n\n"
-                               f"Check Console for confusion matrix!")
+        classes = self.get_selected_classes()
+        is_mlp = False
+        if self.selected_model == "MLP":
+            classes = self.CLASSES
+            is_mlp = True
+
+
+        train_eval, test_eval, conf_mat = test_model(classes, mlp=is_mlp)
+        if is_mlp:
+            tk.messagebox.showinfo("Model Tested",
+                                   f"Model MSE on train data {train_eval}\n"
+                                   f"Model MSE on test data {test_eval}\n\n"
+                                   f"Check Console for confusion matrix!")
+        else:
+            tk.messagebox.showinfo("Model Tested",
+                                   f"Model Accuracy on train data {train_eval}\n"
+                                   f"Model Accuracy on test data {test_eval}\n\n"
+                                   f"Check Console for confusion matrix!")
 
     def plot_button(self):
         self.init_viz_frame()
@@ -232,9 +279,24 @@ class WidgetManager:
         self.selected_model = selection
 
         if selection == "Perceptron":
+            self.frames["FEATURES"].grid(row=1, column=0)
+            self.frames["CLASSES"].grid(row=2, column=0)
+            self.buttons['plot'].grid(row=0, column=2)
+            self.frames["ARCHI"].grid_forget()
+            if "activation" in self.hyper_parameters_widgets.keys():
+                self.hyper_parameters_widgets["activation"].grid_forget()
+                self.hyper_parameters_widgets["activation_label"].grid_forget()
             self.__reset_parameters_widgets()
 
         elif selection == "Adaline":
+            self.frames["FEATURES"].grid(row=1, column=0)
+            self.frames["CLASSES"].grid(row=2, column=0)
+            self.buttons['plot'].grid(row=0, column=2)
+            self.frames["ARCHI"].grid_forget()
+
+            if "activation" in self.hyper_parameters_widgets.keys():
+                self.hyper_parameters_widgets["activation"].grid_forget()
+                self.hyper_parameters_widgets["activation_label"].grid_forget()
             self.__reset_parameters_widgets()
             # TODO: add logic for only epochs or min_threshold can be provided not both
             column_count = self.frames["PARAMETERS"].grid_size()[0]
@@ -244,7 +306,35 @@ class WidgetManager:
             self.hyper_parameters_widgets["min_threshold"].grid(row=0, column=column_count, padx=5)
 
         elif selection == "MLP":
-            tk.messagebox.showinfo("Model Not Available", "This model hasn't been added yet")
+            self.__reset_parameters_widgets()
+            self.show_mlp_gui()
+
+    def show_mlp_gui(self):
+        self.frames["FEATURES"].grid_forget()
+        self.frames["CLASSES"].grid_forget()
+        self.buttons['plot'].grid_forget()
+
+        self.frames["ARCHI"].grid(row=1, column=0, rowspan=2)
+
+        tk.Label(self.frames["ARCHI"], text="Choose network configurations: ").grid(row=0, column=0)
+        archi_text = tk.StringVar(self.frames["ARCHI"], "5, 5, 3")
+        tk.Entry(self.frames["ARCHI"], width=20,
+                 textvariable=archi_text).grid(row=1, column=0)
+        self.hyper_parameters_widgets["archi"] = archi_text
+
+        self.hyper_parameters_widgets["activation_label"] = tk.Label(self.frames["PARAMETERS"],
+                                                                     text="Choose activation: ")
+        self.hyper_parameters_widgets["activation_label"].grid(row=1, column=0)
+
+        activation_val = tk.StringVar(self.frames["ARCHI"])
+        self.hyper_parameters_widgets["activation"] = ttk.OptionMenu(self.frames["PARAMETERS"],
+                                                                     activation_val,
+                                                                     self.AVAILABLE_ACTIVATIONS[0],
+                                                                     *self.AVAILABLE_ACTIVATIONS)
+        self.hyper_parameters_widgets["activation_val"]: tk.StringVar = activation_val
+        self.hyper_parameters_widgets["activation"].grid(row=1, column=1)
+
+
 
 
 widget_manager = WidgetManager()
@@ -252,3 +342,4 @@ widget_manager = WidgetManager()
 
 def run_gui():
     widget_manager.main_window.mainloop()
+

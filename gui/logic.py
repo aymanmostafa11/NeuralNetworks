@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
+from models.Losses import mean_squared_error
+import models.Activations
 from DataManager import prep_data, get_viz_data
-from models.NeuralNetworks import Perceptron, Adaline
+from models.NeuralNetworks import Perceptron, Adaline, MLP
+from models.Activations import linear, sigmoid
 from Utils import accuracy_score, confusion_matrix
 
 __model__: Perceptron
@@ -12,7 +15,7 @@ y_test: pd.DataFrame
 viz_data: pd.DataFrame
 
 
-def fit_model(model_name, features: list, classes: list, hyper_parameters: dict):
+def fit_model(model_name, hyper_parameters: dict, features: list = None, classes: list = None):
     global __model__
 
     load_data(features, classes)
@@ -25,23 +28,53 @@ def fit_model(model_name, features: list, classes: list, hyper_parameters: dict)
         __model__ = Adaline(hyper_parameters["lr"], hyper_parameters["bias"])
         __model__.fit(x_train, y_train, hyper_parameters["epochs"], hyper_parameters['min_threshold'], normal_eq=False)
 
+    elif model_name == "MLP":
+        hyper_parameters["archi"].insert(0, len(features))
+        hyper_parameters["archi"].append(len(classes))
+        activation = parse_activation(hyper_parameters["activation"].lower())
 
-def test_model(classes=None, train_only=False):
+        layers = {i: {"units": units, "activation": activation}
+                  for i, units in enumerate(hyper_parameters["archi"])}
+        layers[0]["activation"] = parse_activation("linear")
+
+        __model__ = MLP(hyper_parameters["lr"], layers, hyper_parameters["bias"])
+        __model__.fit(x_train, y_train, hyper_parameters["epochs"])
+
+
+def parse_activation(text):
+    if text == "sigmoid":
+        return models.Activations.sigmoid
+    elif text == "tanh":
+        return models.Activations.tanh
+    elif text == "linear":
+        return models.Activations.linear
+
+    raise ValueError("Activation doesn't exist")
+
+
+def test_model(classes=None, train_only=False, mlp=False):
     """
     :return: train accuracy score, test accuracy score and confusion matrix
     """
-
-    train_acc = accuracy_score(y_train.values, __model__.predict(x_train))
-    if train_only:
-        return train_acc
-
     test_pred = __model__.predict(x_test)
-    test_acc = accuracy_score(y_test.values, test_pred)
 
-    conf_mat = confusion_matrix(y_test.values, test_pred,
-                                {"pos": classes[1], "neg": classes[0]},
-                                {"pos": 1, "neg": -1})
-    return train_acc, test_acc, conf_mat
+    if mlp:
+        train_eval = mean_squared_error(y_train.values.T, __model__.predict(x_train))
+        if train_only:
+            return train_eval
+
+        test_eval = mean_squared_error(y_test.values.T, __model__.predict(x_test))
+        conf_mat = None
+    else:
+        train_eval = accuracy_score(y_train.values, __model__.predict(x_train))
+        if train_only:
+            return train_eval
+        test_eval = accuracy_score(y_test.values, test_pred)
+        conf_mat = confusion_matrix(y_test.values, test_pred,
+                                    {"pos": classes[1], "neg": classes[0]},
+                                    {"pos": 1, "neg": -1})
+
+    return train_eval, test_eval, conf_mat
 
 
 def get_model_weights():
