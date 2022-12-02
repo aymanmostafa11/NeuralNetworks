@@ -80,14 +80,18 @@ def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray, verbose=False):
 
     return acc
 
-def confusion_matrix_for_multiclass(y_true, y_pred):
-    conf_mat = sklearn.metrics.confusion_matrix(y_true,y_pred)
+def confusion_matrix_for_multiclass(y_true, y_pred, labels):
+    conf_mat = sklearn.metrics.confusion_matrix(y_true, y_pred)
     print("\n\n##########################")
     print("#### Confusion Matrix ####")
     print("##########################")
     table = BeautifulTable()
-    for row in range(0,conf_mat.shape[0]):
-        table.append_row(conf_mat[row])
+    table.append_row(["", *["Predicted\n" + label for label in labels]])
+    for row in range(0, conf_mat.shape[0]):
+        data = ["Actual\n" + labels[row]]
+        data.extend(conf_mat[row])
+
+        table.append_row(data)
     print(table)
     
 #

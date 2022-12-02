@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+
+import DataManager
 from models.Losses import mean_squared_error
 import models.Activations
 from DataManager import prep_data, get_viz_data
@@ -42,16 +44,6 @@ def fit_model(model_name, hyper_parameters: dict, features: list = None, classes
         __model__.fit(x_train, y_train, hyper_parameters["epochs"])
 
 
-def parse_activation(text):
-    if text == "sigmoid":
-        return models.Activations.sigmoid
-    elif text == "tanh":
-        return models.Activations.tanh
-    elif text == "linear":
-        return models.Activations.linear
-
-    raise ValueError("Activation doesn't exist")
-
 
 def test_model(classes=None, train_only=False, mlp=False):
     """
@@ -64,8 +56,12 @@ def test_model(classes=None, train_only=False, mlp=False):
         if train_only:
             return train_eval
 
-        test_eval = mean_squared_error(y_test.values.T, __model__.predict(x_test))
-        conf_mat = confusion_matrix_for_multiclass(y_test.values.argmax(axis=1).tolist(),test_pred.T.argmax(axis=1).tolist())
+        test_eval = mean_squared_error(y_test.values.T, test_pred)
+
+        labels = DataManager.get_encoder("one_hot").inverse_transform([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        conf_mat = confusion_matrix_for_multiclass(y_test.values.argmax(axis=1).tolist(),
+                                                   test_pred.T.argmax(axis=1).tolist(),
+                                                   np.squeeze(labels).tolist())
     else:
         train_eval = accuracy_score(y_train.values, __model__.predict(x_train))
         if train_only:
@@ -92,3 +88,14 @@ def load_data(features: list, classes: list):
 
     x_train, x_test, y_train, y_test = prep_data(classes, features)
     viz_data = get_viz_data(classes, features)
+
+
+def parse_activation(text):
+    if text == "sigmoid":
+        return models.Activations.sigmoid
+    elif text == "tanh":
+        return models.Activations.tanh
+    elif text == "linear":
+        return models.Activations.linear
+
+    raise ValueError("Activation doesn't exist")

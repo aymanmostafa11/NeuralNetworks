@@ -3,10 +3,12 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MultiLabelBinarizer
 from sklearn.decomposition import PCA
 
-encoder = LabelEncoder()
+label_encoder = LabelEncoder()
+one_hot_encoder = OneHotEncoder()
+
 filepath = "data/penguins.csv"
-mnist_train_path = "data/mnist_train.csv"
-mnist_test_path = "data/mnist_test.csv"
+mnist_train_path = "data/mnist/mnist_train.csv"
+mnist_test_path = "data/mnist/mnist_test.csv"
 
 def prep_data(classes, features, mlp_labels=True):
     """
@@ -43,8 +45,8 @@ def preprocessing(data, dataFeatures, test=False):
    
     for feature in dataFeatures:
         if data[feature].dtypes == object:
-            encoder.fit(data[feature])
-            data[feature] = encoder.transform(data[feature])
+            label_encoder.fit(data[feature])
+            data[feature] = label_encoder.transform(data[feature])
 
     return data
 
@@ -59,8 +61,7 @@ def encodeTargets(data,classes):
 
 
 def encode_multilabel_targets(y):
-    encoder = OneHotEncoder()
-    encoded_labels = encoder.fit_transform(y.values.reshape(-1, 1))
+    encoded_labels = one_hot_encoder.fit_transform(y.values.reshape(-1, 1))
     return encoded_labels.toarray()
 
 
@@ -161,4 +162,18 @@ def reduce_dimensions_of_mnist(X,degree = 80):
     pca = PCA(n_components=degree)
     X_reduced = pca.fit_transform(X)
     return X_reduced
+
+
+def get_encoder(type_ = "one_hot"):
+    """
+
+    :param type_: "one_hot" or "label"
+    :return: encoder
+    """
+    if type_ == "one_hot":
+        return one_hot_encoder
+    elif type_ == "label":
+        return label_encoder
+    else:
+        raise ValueError("Encoder type doesn't exist, valid values are ('one_hot', 'label')")
 
