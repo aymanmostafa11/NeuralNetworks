@@ -1,5 +1,6 @@
 import numpy as np
 from beautifultable import BeautifulTable
+import sklearn.metrics
 
 
 def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, label_names_dict = None, label_values_dict=None, verbose=True):
@@ -79,6 +80,16 @@ def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray, verbose=False):
 
     return acc
 
+def confusion_matrix_for_multiclass(y_true, y_pred):
+    conf_mat = sklearn.metrics.confusion_matrix(y_true,y_pred)
+    print("\n\n##########################")
+    print("#### Confusion Matrix ####")
+    print("##########################")
+    table = BeautifulTable()
+    for row in range(0,conf_mat.shape[0]):
+        table.append_row(conf_mat[row])
+    print(table)
+    
 #
 # a = np.array([1,0,0,1])
 # b = np.array([1,0,1,0])

@@ -5,7 +5,8 @@ import models.Activations
 from DataManager import prep_data, get_viz_data
 from models.NeuralNetworks import Perceptron, Adaline, MLP
 from models.Activations import linear, sigmoid
-from Utils import accuracy_score, confusion_matrix
+from Utils import accuracy_score, confusion_matrix , confusion_matrix_for_multiclass
+import sklearn.metrics
 
 __model__: Perceptron
 x_train: pd.DataFrame
@@ -64,7 +65,7 @@ def test_model(classes=None, train_only=False, mlp=False):
             return train_eval
 
         test_eval = mean_squared_error(y_test.values.T, __model__.predict(x_test))
-        conf_mat = None
+        conf_mat = confusion_matrix_for_multiclass(y_test.values.argmax(axis=1).tolist(),test_pred.T.argmax(axis=1).tolist())
     else:
         train_eval = accuracy_score(y_train.values, __model__.predict(x_train))
         if train_only:

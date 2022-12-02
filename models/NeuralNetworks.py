@@ -225,7 +225,7 @@ class MLP(Model):
         if type(x) == pd.DataFrame:
             x = x.values
         x = x.T
-
+        
         return self._forward(x)[0]
 
     def _march(self, a_in: np.ndarray, W: np.ndarray, b: np.ndarray, g):
