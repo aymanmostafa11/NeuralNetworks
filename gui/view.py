@@ -19,6 +19,7 @@ class WidgetManager:
     CLASSES = ('Adelie', 'Gentoo', 'Chinstrap')
     AVAILABLE_MODELS = ["Perceptron", "Adaline", "MLP"]
     AVAILABLE_ACTIVATIONS = ["Sigmoid", "Tanh"]
+    AVAILABLE_DATA = ["penguins", "mnist"]
 
     def __init__(self):
         self.main_window = tk.Tk()
@@ -34,6 +35,7 @@ class WidgetManager:
         self.model_listbox: tk.Listbox = None
 
         self.selected_model = self.AVAILABLE_MODELS[0]
+        self.selected_data = tk.StringVar()
 
         self.__init_window()
         self.__init_frames()
@@ -55,6 +57,9 @@ class WidgetManager:
 
         self.frames["ARCHI"] = tk.Frame(self.main_frame, highlightbackground="black", highlightthickness=1,
                                         name="archi")
+
+        self.frames["DATA"] = tk.Frame(self.main_frame, highlightbackground="black", highlightthickness=1,
+                                       name="data")
 
         # init
         self.__init_model_frame()
@@ -243,7 +248,11 @@ class WidgetManager:
 
 
         # fit model
-        fit_model(self.selected_model, self.get_hyperparameters(), features, classes)
+        if self.selected_data.get() == "mnist":
+            tk.messagebox.showinfo(title="Data loading", message=f"Kindly wait while the dataset is being loaded.\n"
+                                                                 f"the program might look like it's stuck but it's not.\n\n"
+                                                                 f"(Close this window to start loading the data)")
+        fit_model(self.selected_model, self.get_hyperparameters(), self.selected_data.get(), features, classes)
 
         if self.selected_model != "MLP":
             tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy "
@@ -285,6 +294,7 @@ class WidgetManager:
             self.frames["CLASSES"].grid(row=2, column=0)
             self.buttons['plot'].grid(row=0, column=2)
             self.frames["ARCHI"].grid_forget()
+            self.frames["DATA"].grid_forget()
             if "activation" in self.hyper_parameters_widgets.keys():
                 self.hyper_parameters_widgets["activation"].grid_forget()
                 self.hyper_parameters_widgets["activation_label"].grid_forget()
@@ -295,7 +305,7 @@ class WidgetManager:
             self.frames["CLASSES"].grid(row=2, column=0)
             self.buttons['plot'].grid(row=0, column=2)
             self.frames["ARCHI"].grid_forget()
-
+            self.frames["DATA"].grid_forget()
             if "activation" in self.hyper_parameters_widgets.keys():
                 self.hyper_parameters_widgets["activation"].grid_forget()
                 self.hyper_parameters_widgets["activation_label"].grid_forget()
@@ -316,19 +326,32 @@ class WidgetManager:
         self.frames["CLASSES"].grid_forget()
         self.buttons['plot'].grid_forget()
 
-        self.frames["ARCHI"].grid(row=1, column=0, rowspan=2)
 
-        tk.Label(self.frames["ARCHI"], text="Choose network configurations: ").grid(row=0, column=0)
+        self.frames["DATA"].grid(row=1, column=0)
+        tk.Label(self.frames["DATA"], text="Choose Dataset: ").grid(row=0, column=0)
+        ttk.OptionMenu(self.frames["DATA"],
+                       self.selected_data,
+                       self.AVAILABLE_DATA[0],
+                       *self.AVAILABLE_DATA).grid(row=0, column=1)
+        ###############
+        # Architecture
+        ###############
+        self.frames["ARCHI"].grid(row=2, column=0)
+
+        tk.Label(self.frames["ARCHI"], text="Choose hidden layers architecture: ").grid(row=0, column=0)
         archi_text = tk.StringVar(self.frames["ARCHI"], "5, 5, 3")
         tk.Entry(self.frames["ARCHI"], width=20,
                  textvariable=archi_text).grid(row=1, column=0)
         self.hyper_parameters_widgets["archi"] = archi_text
+        tk.Label(self.frames["ARCHI"], text="layer1_neurons, layer2_neurons, etc..\n"
+                                            "(Input layer and output layer neurons are inferred from data)"
+                 , foreground="grey").grid(row=3, column=0)
 
         self.hyper_parameters_widgets["activation_label"] = tk.Label(self.frames["PARAMETERS"],
                                                                      text="Choose activation: ")
         self.hyper_parameters_widgets["activation_label"].grid(row=1, column=0)
 
-        activation_val = tk.StringVar(self.frames["ARCHI"])
+        activation_val = tk.StringVar(self.frames["PARAMETERS"])
         self.hyper_parameters_widgets["activation"] = ttk.OptionMenu(self.frames["PARAMETERS"],
                                                                      activation_val,
                                                                      self.AVAILABLE_ACTIVATIONS[0],

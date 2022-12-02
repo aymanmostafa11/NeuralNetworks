@@ -9,12 +9,23 @@ one_hot_encoder = OneHotEncoder()
 filepath = "data/penguins.csv"
 mnist_train_path = "data/mnist/mnist_train.csv"
 mnist_test_path = "data/mnist/mnist_test.csv"
+mnist_cache = None
 
-
-def prep_data(classes, features, mlp_labels=True):
+def prep_data(dataset, classes, features, mlp_labels=True):
     """
+    :param dataset:
     :return: x_train, x_test, y_train, y_test
     """
+
+    if dataset == "penguins":
+        return __prep_penguins(classes, features, mlp_labels)
+    elif dataset == "mnist":
+        return prep_mnist()
+    else:
+        raise ValueError(f"Data requested ({dataset}) not available")
+
+
+def __prep_penguins(classes, features, mlp_labels):
     data = read()
     featuresToDrop = [feature for feature in data.columns.drop("species") if feature not in features]
     data.drop(featuresToDrop, inplace=True, axis=1)
@@ -130,20 +141,27 @@ def get_viz_data(classes, features):
 
 
 def prep_mnist(reduceDimensions = True , degree = 80):
+    global mnist_cache
+    if mnist_cache is not None:
+        return mnist_cache["x_train"], mnist_cache["x_test"], mnist_cache["y_train"], mnist_cache["y_test"]
+
     mnist_train, mnist_test = read_mnist()
     mnist_train.fillna(0,inplace = True)
     mnist_test.fillna(0,inplace = True)
-    remove_constant_pixels(mnist_train)
-    remove_constant_pixels(mnist_test)
+    #remove_constant_pixels(mnist_train)
+    #remove_constant_pixels(mnist_test)
     X_train , Y_train = split_mnist(mnist_train)
     X_test , Y_test = split_mnist(mnist_test)
     X_train = X_train / 255.0
     X_test = X_test / 255.0
 
-    if reduceDimensions == True:
-        X_train = reduce_dimensions_of_mnist(X_train, degree = degree)
-        X_test = reduce_dimensions_of_mnist(X_test, degree = degree)
-    
+    # if reduceDimensions == True:
+    #     X_train = reduce_dimensions_of_mnist(X_train, degree = degree)
+    #     X_test = reduce_dimensions_of_mnist(X_test, degree = degree)
+
+
+    mnist_cache = {"x_train": X_train, "x_test": X_test, "y_train": Y_train, "y_test": Y_test}
+
     return X_train, X_test, Y_train, Y_test
 
 
