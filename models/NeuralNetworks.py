@@ -52,28 +52,63 @@ class Adaline(Model):
         super().__init__(lr, bias)
         self._activation = Activations.linear
 
-    def fit(self, x: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray, epochs=100, verbose=True):
-        # solve using normal equation
+    def fit(self, x: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray, epochs=100, min_threshold=1.0, normal_eq=True, verbose=True):
+        """
+        :param x: Training vector
+        :param y: Target vector relative to x
+        :param epochs: Specifies number of times to loop over whole Data, default=100, discarded if normal_eq=True
+        :param min_threshold: Specifies minimum cost to stop fitting the model, default=1.0, discarded if normal_eq=True
+        :param normal_eq: Solves for weights analytically using least squares cost function, default:False
+        :param verbose: Prints cost after each epoch, default=True, , discarded if normal_eq=True
+        """
         X = x.copy(deep=True)
         Y = y.copy(deep=True)
+
+        self.__init_weights(self, X)
 
         if self._bias is True:
             X.insert(0, "bias", np.ones(X.shape[0]))
 
-        self._weights = np.dot(np.linalg.inv(X.T @ X), X.T @ Y)
+        if normal_eq == True:
+            self._solve_analytically(X, Y)
+        else:
+             self._solve_iteratively(X, Y, epochs, min_threshold, verbose)
+
+    def _solve_iteratively(self, X: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray, epochs, min_threshold, verbose):
+
+        samples_count = X.shape[0]
+
+        for e in range(epochs):
+            for i in range(samples_count):
+
+                sample = np.array(X.iloc[i])
+                output = np.dot(self._weights, sample)
+                error = y.iloc[i]-output
+                self._weights = np.add(self._weights, self._lr*error*sample.T)
+
+            # calculate error over all samples using updated weights
+            cost = self._calculate_cost(self.predict(X), y)
+            if verbose==True:
+                print(f'epoch {e}: {cost}')
+            if cost <= min_threshold:
+                break
+
+    def _solve_analytically(self, X: pd.DataFrame | np.ndarray, y: pd.DataFrame | np.ndarray):
+        self._weights = np.dot(np.linalg.inv(X.T @ X), X.T @ y)
 
     def predict(self, x: pd.DataFrame | np.ndarray):
 
-        X = x.copy(deep=True)  # to prevent adding bias from editing original data
+        X = x.copy(deep=True)
         if self._bias is True and "bias" not in X.columns:
             X.insert(0, "bias", np.ones(X.shape[0]))
-        return np.where(X @ self._weights > 0, 1, -1)
+        return np.where(self._weights@X.T > 0, 1, -1)
 
-    def _calculate_cost(self):
-        print("Not Implemented")
+    def _calculate_cost(self, pred, actual):
+        return np.sum(np.power((pred-np.array(actual)), 2))/(2*len(actual))
 
     def _calculate_updates(self):
-        print("Not Implemented")
+        pass
+
 
 
 class Perceptron:
@@ -225,7 +260,7 @@ class MLP(Model):
         if type(x) == pd.DataFrame:
             x = x.values
         x = x.T
-        
+
         return self._forward(x)[0]
 
     def _march(self, a_in: np.ndarray, W: np.ndarray, b: np.ndarray, g):
