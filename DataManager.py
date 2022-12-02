@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MultiLabelBinarizer
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MultiLabelBinarizer, StandardScaler
 from sklearn.decomposition import PCA
 
 label_encoder = LabelEncoder()
@@ -9,6 +9,7 @@ one_hot_encoder = OneHotEncoder()
 filepath = "data/penguins.csv"
 mnist_train_path = "data/mnist/mnist_train.csv"
 mnist_test_path = "data/mnist/mnist_test.csv"
+
 
 def prep_data(classes, features, mlp_labels=True):
     """
@@ -19,9 +20,10 @@ def prep_data(classes, features, mlp_labels=True):
     data.drop(featuresToDrop, inplace=True, axis=1)
     data = preprocessing(data, data.columns.drop("species"))
 
+    data.iloc[:, 1:] = standardize(data.drop(['species'], axis=1))
     if mlp_labels:
         target = encode_multilabel_targets(data["species"])
-        data.drop(["species"], axis = 1, inplace=True)
+        data.drop(["species"], axis=1, inplace=True)
         data["label_0"] = target[:, 0]
         data["label_1"] = target[:, 1]
         data["label_2"] = target[:, 2]
@@ -111,6 +113,10 @@ def split(data):
     return X_train, X_test, Y_train, Y_test
 
 
+def standardize(data):
+    return (data - data.mean()) / data.std()
+
+
 def get_viz_data(classes, features):
     """
     :return: data without encoding targets and splitting
@@ -151,6 +157,7 @@ def remove_constant_pixels(data):
     for col in data:
         if data[col].max() == 0 or data[col].min() == 255:
             data.drop(columns=[col], inplace=True)    
+
 
 def split_mnist(data):
     X = data.drop(columns = 'label')

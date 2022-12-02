@@ -5,6 +5,7 @@ from models.Losses import mean_squared_error
 from models.Activations import *
 from Utils import accuracy_score
 from abc import ABC, abstractmethod
+import copy
 
 RANDOM_SEED = 42
 RANDOM_GENERATOR = np.random.RandomState(RANDOM_SEED)
@@ -206,7 +207,7 @@ class MLP(Model):
 
         # Set random weights for each layer in the network
         for i in range(1, len(self._layers)):
-            self._weights.append(np.random.rand(self._layers[i]['units'], self._layers[i - 1]['units']))
+            self._weights.append(RANDOM_GENERATOR.rand(self._layers[i]['units'], self._layers[i - 1]['units']) )
 
         if self._bias:
             """
@@ -277,19 +278,18 @@ class MLP(Model):
         a_out = g(z)
         return a_out, z
 
-    def _forward(self, x: np.ndarray):
+    def _forward(self, feat: np.ndarray):
         """
         :param x: sample input
         :return: prediction
         """
-
+        x = copy.deepcopy(feat)
         cache = {}
         for l in range(len(self._layers)):
             bias = None if not self._bias else self._biases[l]
             x, z = self._march(x, self._weights[l], bias, self._layers[l]['activation'])
             cache["A" + str(l)] = x
             cache["Z" + str(l)] = z
-
 
         return x, cache
 

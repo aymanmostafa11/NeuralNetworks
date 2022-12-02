@@ -21,6 +21,7 @@ viz_data: pd.DataFrame
 def fit_model(model_name, hyper_parameters: dict, features: list = None, classes: list = None):
     global __model__
 
+    # TODO: Integrate with mlp labels and different data
     load_data(features, classes)
 
     if model_name == "Perceptron":
@@ -79,14 +80,14 @@ def get_model_weights():
     return np.insert(weights, 0, values=0, axis=0) if len(weights) == 2 else weights # adds a bias "0" in case of no bias models
 
 
-def load_data(features: list, classes: list):
+def load_data(features: list, classes: list, is_mlp=True):
     global x_train
     global y_train
     global x_test
     global y_test
     global viz_data
 
-    x_train, x_test, y_train, y_test = prep_data(classes, features)
+    x_train, x_test, y_train, y_test = prep_data(classes, features, is_mlp)
     viz_data = get_viz_data(classes, features)
 
 

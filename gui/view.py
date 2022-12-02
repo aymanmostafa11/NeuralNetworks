@@ -54,7 +54,7 @@ class WidgetManager:
             self.frames[name].grid(row=row_index, column=0)
 
         self.frames["ARCHI"] = tk.Frame(self.main_frame, highlightbackground="black", highlightthickness=1,
-                                        name=str.lower("archi"))
+                                        name="archi")
 
         # init
         self.__init_model_frame()
@@ -213,6 +213,8 @@ class WidgetManager:
             error_msg = "Learning rate should be between 0 and 1,\nEpochs should be an integer > 0"
             if model == "Adaline":
                 error_msg += "\nMin Threshold should be a float > 0"
+            elif model == "MLP":
+                error_msg += "\nNetwork configuration should be in the form 'l1_neurons,l2_neurons,etc..'"
 
             tk.messagebox.showerror("Invalid Parameters", error_msg)
             return False
