@@ -18,11 +18,11 @@ y_test: pd.DataFrame
 viz_data: pd.DataFrame
 
 
-def fit_model(model_name, hyper_parameters: dict, dataset: str, features: list = None, classes: list = None):
+def fit_model(model_name, hyper_parameters: dict, dataset: str, features: list = None, classes: list = None, is_mlp=False):
     global __model__
 
     # TODO: Integrate with mlp labels and different data
-    load_data(dataset, features, classes)
+    load_data(dataset, features, classes, is_mlp)
 
     if model_name == "Perceptron":
         __model__ = Perceptron(hyper_parameters['lr'], hyper_parameters['epochs'], hyper_parameters['bias'])
@@ -80,7 +80,7 @@ def get_model_weights():
     return np.insert(weights, 0, values=0, axis=0) if len(weights) == 2 else weights # adds a bias "0" in case of no bias models
 
 
-def load_data(dataset: str, features: list, classes: list, is_mlp=True):
+def load_data(dataset: str, features: list, classes: list, is_mlp=False):
     global x_train
     global y_train
     global x_test

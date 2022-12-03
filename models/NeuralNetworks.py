@@ -145,7 +145,7 @@ class Perceptron:
                 sample = np.array(X.iloc[i])
                 activation = np.sum(sample * self.__weights)
                 prediction = self.__activation(activation)
-                error = Y.iloc[i] - prediction
+                error = np.squeeze(Y.values[i] - prediction)
                 self.__weights += (self.__learning_rate * error * sample)
 
             if verbose and epoch % (self.__epochs / 10) == 0:

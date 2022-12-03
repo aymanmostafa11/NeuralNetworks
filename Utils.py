@@ -19,8 +19,8 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, label_names_dict = 
                                 {"positive_label": 1, "negative_label": 1}
 
     """
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    y_true = np.array(y_true).squeeze()
+    y_pred = np.array(y_pred).squeeze()
 
     if label_values_dict:
         assert len(label_values_dict.keys()) == 2, "Current confusion matrix implementation supports binary labels only"
@@ -74,7 +74,10 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, label_names_dict = 
 
 
 def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray, verbose=False):
-    acc = np.round( np.sum(y_true == y_pred) / len(y_true) * 100, 2)
+    y_true = y_true.squeeze()
+    y_pred = y_pred.squeeze()
+
+    acc = np.round(np.sum(y_true == y_pred) / len(y_true) * 100, 2)
     if verbose:
         print(acc)
 

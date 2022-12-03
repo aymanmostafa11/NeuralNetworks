@@ -36,6 +36,7 @@ class WidgetManager:
 
         self.selected_model = self.AVAILABLE_MODELS[0]
         self.selected_data = tk.StringVar()
+        self.selected_data.set(self.AVAILABLE_DATA[0])
 
         self.__init_window()
         self.__init_frames()
@@ -240,6 +241,7 @@ class WidgetManager:
         if not self.__verify_parameters():
             return
 
+        is_mlp = self.selected_model == "MLP"
         features = self.FEATURES
         classes = self.CLASSES
         if self.selected_model == "Adaline" or self.selected_model == "Perceptron":
@@ -252,7 +254,7 @@ class WidgetManager:
             tk.messagebox.showinfo(title="Data loading", message=f"Kindly wait while the dataset is being loaded.\n"
                                                                  f"the program might look like it's stuck but it's not.\n\n"
                                                                  f"(Close this window to start loading the data)")
-        fit_model(self.selected_model, self.get_hyperparameters(), self.selected_data.get(), features, classes)
+        fit_model(self.selected_model, self.get_hyperparameters(), self.selected_data.get(), features, classes, is_mlp)
 
         if self.selected_model != "MLP":
             tk.messagebox.showinfo(title="Model Fitted", message=f"Model Finished Fitting with train accuracy "
@@ -295,6 +297,9 @@ class WidgetManager:
             self.buttons['plot'].grid(row=0, column=2)
             self.frames["ARCHI"].grid_forget()
             self.frames["DATA"].grid_forget()
+
+            self.selected_data.set(self.AVAILABLE_DATA[0])
+
             if "activation" in self.hyper_parameters_widgets.keys():
                 self.hyper_parameters_widgets["activation"].grid_forget()
                 self.hyper_parameters_widgets["activation_label"].grid_forget()
@@ -306,6 +311,9 @@ class WidgetManager:
             self.buttons['plot'].grid(row=0, column=2)
             self.frames["ARCHI"].grid_forget()
             self.frames["DATA"].grid_forget()
+
+            self.selected_data.set(self.AVAILABLE_DATA[0])
+
             if "activation" in self.hyper_parameters_widgets.keys():
                 self.hyper_parameters_widgets["activation"].grid_forget()
                 self.hyper_parameters_widgets["activation_label"].grid_forget()

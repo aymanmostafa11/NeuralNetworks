@@ -7,11 +7,11 @@ label_encoder = LabelEncoder()
 one_hot_encoder = OneHotEncoder()
 
 filepath = "data/penguins.csv"
-mnist_train_path = "data/mnist/mnist_train.csv"
-mnist_test_path = "data/mnist/mnist_test.csv"
+mnist_train_path = "data/mnist/mnist_train_mini.csv"
+mnist_test_path = "data/mnist/mnist_test_mini.csv"
 mnist_cache = None
 
-def prep_data(dataset, classes, features, mlp_labels=True):
+def prep_data(dataset, classes, features, mlp_labels=False):
     """
     :param dataset:
     :return: x_train, x_test, y_train, y_test
@@ -137,6 +137,7 @@ def get_viz_data(classes, features):
     data.drop(featuresToDrop, inplace=True, axis=1)
     data = preprocessing(data, data.columns.drop("species"))
     data = data[(data['species'] == classes[0]) | (data['species'] == classes[1])]
+    data.iloc[:, 1:] = standardize(data.drop(['species'], axis=1))
     return data
 
 
@@ -148,16 +149,16 @@ def prep_mnist(reduceDimensions = True , degree = 80):
     mnist_train, mnist_test = read_mnist()
     mnist_train.fillna(0,inplace = True)
     mnist_test.fillna(0,inplace = True)
-    #remove_constant_pixels(mnist_train)
-    #remove_constant_pixels(mnist_test)
+    remove_constant_pixels(mnist_train)
+    remove_constant_pixels(mnist_test)
     X_train , Y_train = split_mnist(mnist_train)
     X_test , Y_test = split_mnist(mnist_test)
     X_train = X_train / 255.0
     X_test = X_test / 255.0
 
-    # if reduceDimensions == True:
-    #     X_train = reduce_dimensions_of_mnist(X_train, degree = degree)
-    #     X_test = reduce_dimensions_of_mnist(X_test, degree = degree)
+    if reduceDimensions == True:
+        X_train = reduce_dimensions_of_mnist(X_train, degree = degree)
+        X_test = reduce_dimensions_of_mnist(X_test, degree = degree)
 
 
     mnist_cache = {"x_train": X_train, "x_test": X_test, "y_train": Y_train, "y_test": Y_test}
