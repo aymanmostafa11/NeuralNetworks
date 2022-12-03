@@ -368,8 +368,6 @@ class WidgetManager:
         self.hyper_parameters_widgets["activation"].grid(row=1, column=1)
 
 
-
-
 widget_manager = WidgetManager()
 
 

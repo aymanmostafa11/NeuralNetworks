@@ -26,14 +26,16 @@ class Model(ABC):
     def predict(self, x: pd.DataFrame | np.ndarray):
         pass
 
-    def __init_weights(self, x: pd.DataFrame):
+    def _init_weights(self, x: pd.DataFrame):
         """
         Initializes random weights with shape (1, features)
         """
+
         features_count = x.shape[1]
         if self._bias:
             features_count += 1
-        self.__weights = RANDOM_GENERATOR.rand(1, features_count)
+
+        self._weights = RANDOM_GENERATOR.rand(1, features_count)
 
     @abstractmethod
     def _calculate_cost(self):
@@ -65,7 +67,7 @@ class Adaline(Model):
         X = x.copy(deep=True)
         Y = y.copy(deep=True)
 
-        self.__init_weights(self, X)
+        self._init_weights(X)
 
         if self._bias is True:
             X.insert(0, "bias", np.ones(X.shape[0]))
@@ -84,13 +86,13 @@ class Adaline(Model):
 
                 sample = np.array(X.iloc[i])
                 output = np.dot(self._weights, sample)
-                error = y.iloc[i]-output
+                error = np.squeeze(y.values[i]-output)
                 self._weights = np.add(self._weights, self._lr*error*sample.T)
 
             # calculate error over all samples using updated weights
             cost = self._calculate_cost(self.predict(X), y)
             if verbose==True:
-                print(f'epoch {e}: {cost}')
+                print(f"Epoch : {e}, Cost : {cost}")
             if cost <= min_threshold:
                 break
 
@@ -105,7 +107,11 @@ class Adaline(Model):
         return np.where(self._weights@X.T > 0, 1, -1)
 
     def _calculate_cost(self, pred, actual):
-        return np.sum(np.power((pred-np.array(actual)), 2))/(2*len(actual))
+        pred = pred.squeeze()
+        actual = actual.values.squeeze()
+
+        return np.round(np.sum(np.power((pred - actual), 2))/(2*len(actual)), 4)
+
 
     def _calculate_updates(self):
         pass
@@ -193,7 +199,7 @@ class MLP(Model):
             IMPORTANT: make sure to give the input layer a linear activation
         """
 
-    def __init_weights(self, x: pd.DataFrame):
+    def _init_weights(self, x: pd.DataFrame):
         features_count = x.shape[0]
 
         """
@@ -240,7 +246,7 @@ class MLP(Model):
         x = x.T
         y = y.T
 
-        self.__init_weights(x)
+        self._init_weights(x)
 
         for i in range(0, epochs):
             AL, caches = self._forward(x)
