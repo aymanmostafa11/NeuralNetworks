@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 
 label_encoder = LabelEncoder()
 one_hot_encoder = OneHotEncoder()
+mnist_encoder = OneHotEncoder()
 
 filepath = "data/penguins.csv"
 mnist_train_path = "data/mnist/mnist_train_mini.csv"
@@ -151,6 +152,19 @@ def prep_mnist(reduceDimensions = True , degree = 80):
     mnist_test.fillna(0,inplace = True)
     remove_constant_pixels(mnist_train)
     remove_constant_pixels(mnist_test)
+
+    # Encode multilabel
+    unique_labels = np.unique(mnist_train["label"])
+    encoded_labels_train = mnist_encoder.fit_transform(mnist_train["label"].values.reshape(-1, 1)).toarray()
+    mnist_train.drop(['label'], axis = 1, inplace=True)
+    for i in range(len(unique_labels)):
+        mnist_train["label_" + str(i)] = encoded_labels_train[:, i]
+
+    encoded_labels_test = mnist_encoder.transform(mnist_test["label"].values.reshape(-1,1)).toarray()
+    mnist_test.drop(["label"], axis = 1, inplace=True)
+    for i in range(len(unique_labels)):
+        mnist_test["label_" + str(i)] = encoded_labels_test[:, i]
+
     X_train , Y_train = split_mnist(mnist_train)
     X_test , Y_test = split_mnist(mnist_test)
     X_train = X_train / 255.0
@@ -179,8 +193,9 @@ def remove_constant_pixels(data):
 
 
 def split_mnist(data):
-    X = data.drop(columns = 'label')
-    Y = data['label']
+
+    X = data.drop(columns=data.columns[-10:])
+    Y = data.iloc[:, -10:]
     return X,Y
 
 
@@ -200,6 +215,8 @@ def get_encoder(type_ = "one_hot"):
         return one_hot_encoder
     elif type_ == "label":
         return label_encoder
+    elif type_ == "mnist":
+        return mnist_encoder
     else:
         raise ValueError("Encoder type doesn't exist, valid values are ('one_hot', 'label')")
 

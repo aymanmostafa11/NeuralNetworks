@@ -33,8 +33,8 @@ def fit_model(model_name, hyper_parameters: dict, dataset: str, features: list =
         __model__.fit(x_train, y_train, hyper_parameters["epochs"], hyper_parameters['min_threshold'], normal_eq=False)
 
     elif model_name == "MLP":
-        hyper_parameters["archi"].insert(0, len(features))
-        hyper_parameters["archi"].append(len(classes))
+        hyper_parameters["archi"].insert(0, x_train.shape[1])
+        hyper_parameters["archi"].append(y_train.shape[1])
         activation = parse_activation(hyper_parameters["activation"].lower())
 
         layers = {i: {"units": units, "activation": activation}
@@ -46,8 +46,9 @@ def fit_model(model_name, hyper_parameters: dict, dataset: str, features: list =
 
 
 
-def test_model(classes=None, train_only=False, mlp=False):
+def test_model(classes=None, train_only=False, mlp=False, dataset=None):
     """
+    :param dataset:
     :return: train accuracy score, test accuracy score and confusion matrix
     """
     test_pred = __model__.predict(x_test)
@@ -59,7 +60,10 @@ def test_model(classes=None, train_only=False, mlp=False):
 
         test_eval = mean_squared_error(y_test.values.T, test_pred)
 
-        labels = DataManager.get_encoder("one_hot").inverse_transform([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        if dataset == "penguins":
+            labels = DataManager.get_encoder("one_hot").inverse_transform([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        else:
+            labels = np.array([str(i) for i in range(10)])
         conf_mat = confusion_matrix_for_multiclass(y_test.values.argmax(axis=1).tolist(),
                                                    test_pred.T.argmax(axis=1).tolist(),
                                                    np.squeeze(labels).tolist())

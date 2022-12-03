@@ -272,7 +272,7 @@ class WidgetManager:
             is_mlp = True
 
 
-        train_eval, test_eval, conf_mat = test_model(classes, mlp=is_mlp)
+        train_eval, test_eval, conf_mat = test_model(classes, mlp=is_mlp, dataset=self.selected_data.get())
         if is_mlp:
             tk.messagebox.showinfo("Model Tested",
                                    f"Model MSE on train data {train_eval}\n"

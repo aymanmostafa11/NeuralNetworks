@@ -88,7 +88,7 @@ def confusion_matrix_for_multiclass(y_true, y_pred, labels):
     print("\n\n##########################")
     print("#### Confusion Matrix ####")
     print("##########################")
-    table = BeautifulTable()
+    table = BeautifulTable(maxwidth=150)
     table.append_row(["", *["Predicted\n" + label for label in labels]])
     for row in range(0, conf_mat.shape[0]):
         data = ["Actual\n" + labels[row]]
