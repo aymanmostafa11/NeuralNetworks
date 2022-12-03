@@ -185,6 +185,7 @@ class MLP(Model):
         super().__init__(lr, bias)
         self._layers = layers
         self._lr = lr
+        self._bias = bias
         """
             layers
             [
@@ -365,7 +366,8 @@ class MLP(Model):
         L = len(self._weights)  # number of layers in the neural network
         for layer in range(1, L):
             self._weights[layer] = self._weights[layer] - learning_rate * gradients['dW' + str(layer)]
-            self._biases[layer] = self._biases[layer] - learning_rate * gradients['db' + str(layer)]
+            if self._bias:
+                self._biases[layer] = self._biases[layer] - learning_rate * gradients['db' + str(layer)]
 
     def _calculate_cost(self):
         pass
